@@ -1,7 +1,17 @@
 # RPCA Imputation Tutorial
 
 ## About this repo
-This is a collaborative effort between RPCA and RS to create robust training material on imputation for incoming RPCA researchers.
+This repo contains materials resulting from a collaborative effort between RPCA and RS to create robust training on imputation for incoming RPCA researchers.
+
+## Contents of the repo
+
+The primary files in this repo are:
+
+* `rpca-imputation-tutorial.stmd`: tutorial in Stata markstat format
+* `compile.do`: file for compiling the tutorial and organizing the repo
+
+An html version of the tutorial is located in directory `output`.
+Directory `assets` contains a customized version of markstat.css.
 
 ## Tutorial content (preliminary)
 
@@ -20,7 +30,9 @@ Complete case, MCAR, MAR, MNAR
 
 * Other related topics?
 
+## Notes to contributors
 
+Please, mute output from data files. 
 
 
 

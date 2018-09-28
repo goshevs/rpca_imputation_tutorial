@@ -1,0 +1,48 @@
+% RPCA Imputation Tutorial (Placeholder content)
+% Names
+% 9/28/2018, v0.01 
+
+
+## Introduction
+
+Load the dataset. Summarize all variables in `auto.data`
+
+
+```s
+sysuse auto, clear
+sum
+```
+
+Recode repair record.
+
+```s/
+qui recode rep78 1 2 3 = 1 
+```
+
+## Section 2
+
+Plot price vs mpg:
+
+```s
+twoway scatter price mpg, saving(auto, replace) nodraw title("Price vs mpg")
+```
+
+```s/
+qui graph use auto.gph
+qui graph export "auto.png", width(525) replace
+```
+
+<!-- ![](auto.png) -->
+<center>![](auto.png)</center>
+
+
+
+## Section 3
+
+Run a regression of `price` on `mpg`
+
+$y_{i} = \alpha + \beta x_{i} + \epsilon_{i}$
+
+```s/
+reg price mpg
+```
