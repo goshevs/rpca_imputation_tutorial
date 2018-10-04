@@ -13,7 +13,8 @@ set more off
 
 if (c(username) == "goshev") {
 	local base_dir "~/Desktop/gitProjects/rpca_imputation_tutorial"
-	local out_dir "`base_dir'/output"
+	local out_dir_html "`base_dir'/output/html"
+	local out_dir_pdf "`base_dir'/output/pdf"
 }
 
 
@@ -45,6 +46,23 @@ if "`r(pandoc)'" == "" {
 	exit
 }
 
+*** check for pdflatex
+qui whereis pdflatex
+if "`r(pdflatex)'" == "" {
+	noi di in y "Please, install MikTex/configure whereis before proceeding." _n ///
+	"See "`"{browse "http://data.princeton.edu/stata/markdown/gettingStarted":this page}"'" for instructions."
+	exit
+}
+
+
+*** check for mathjax
+qui whereis mathjax
+if "`r(mathjax)'" == "" {
+	noi di in y "Please, install mathjax/configure whereis before proceeding." _n ///
+	"See "`"{browse "http://data.princeton.edu/stata/markdown/gettingStarted":this page}"'" for instructions."
+	exit
+}
+
 
 ********************************************************************************
 *** Utility function definitions
@@ -65,8 +83,11 @@ end
 *** change to base directory
 cd "`base_dir'"
 
-*** compile the document
-markstat using "rpca-imputation-tutorial.stmd", bundle
+*** compile the document as html
+markstat using "rpca-imputation-tutorial.stmd", mathjax
+
+*** compile the document as pdf
+markstat using "rpca-imputation-tutorial.stmd", pdf
 
 
 
@@ -74,24 +95,26 @@ markstat using "rpca-imputation-tutorial.stmd", bundle
 *** Cleaning up
 
 *** stall to display page before moving it to a new location
-sleep 1000
+*sleep 5000
 
 *** move compiled html and all graphs
 local mvContentGraphs: dir . files "*.png"
 local mvContentHtml: dir . files "*.html"
 local mvContent "`mvContentGraphs' `mvContentHtml'"
 foreach file of local mvContent {
-	mv "`base_dir'/`file'" "`out_dir'/`file'" 
+	mv "`base_dir'/`file'" "`out_dir_html'/`file'" 
 }
 
-*** clean up base dir
+*** move pdf files
+local mvContentPdf: dir . files "*.pdf"
+foreach file of local mvContentPdf {
+	mv "`base_dir'/`file'" "`out_dir_pdf'/`file'" 
+}
+
+*** clean up root dir
 local rmContent: dir . files "*"
 foreach f of local rmContent {
 	if regexm("`f'", "\.(gph)?(smcl)?$") {
 		erase `f'
 	}
 }
-
-	
-
-

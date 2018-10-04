@@ -1,6 +1,6 @@
-% RPCA Imputation Tutorial (Placeholder content)
-% Names
-% 9/28/2018, v0.01 
+% Introduction to Missing Data and Imputation (Session 1)
+% Dale Barnhart, Robert Brenan, Simo Goshev
+% `s c(current_date)` , v0.01 
 
 
 *The following is taken from Simo's tutorial on missing data*
@@ -45,7 +45,7 @@ defer from each other, we first need to define two terms: *observed* and
 In our example dataset, these would be the recorded values (except for the 
 missing values) of the eight variables.
 
-**Unobserved data* are data that a researcher fails to measure. These data are 
+**Unobserved data** are data that a researcher fails to measure. These data are 
 represented by the missing values in our variables.
 
 
@@ -285,12 +285,20 @@ general algorithm for its implementation:
 
 The following formulas for aggregation used in Step 3 are known as the *Rubin's rules*:
 
-$$\hat{\beta} = \frac{1}{m}\sum_{m=1}^{M}\hat{\beta}_{m}$$
-$$V_{\beta} = W + (1 + \frac{1}{m})B$$
+$$
+	\hat{\beta} = \frac{1}{m}\sum_{m=1}^{M}\hat{\beta}_{m}
+$$
+$$
+	V_{\beta} = W + (1 + \frac{1}{m})B
+$$
 
 where 
-$$W=\frac{1}{m}\sum_{m=1}^{M}s_{m}^{2}$$
-$$B=\frac{1}{m-1}\sum_{m=1}^{M}(\hat{\beta}_{m} - \hat{\beta})^{2}$$
+$$
+	W=\frac{1}{m}\sum_{m=1}^{M}s_{m}^{2}
+$$
+$$
+	B=\frac{1}{m-1}\sum_{m=1}^{M}(\hat{\beta}_{m} - \hat{\beta})^{2}
+$$
 
 
 Nowadays, multiple imputation is the recommended technique for
@@ -414,9 +422,11 @@ The imputation algorithm has the following general logic:
 
 \begin{equation}
 \begin{array}{clc}
+
 X_{1}^{*} \leftarrow Z \\
 X_{2}^{*} \leftarrow X_{1}^{*}, Z \\
 X_{3}^{*} \leftarrow X_{1}^{*}, X_{2}^{*}, Z
+
 \end{array}
 \end{equation}
 
@@ -439,9 +449,11 @@ One iteration of the imputation algorithm has the following general logic:
 
 \begin{equation}
 \begin{array}{clc}
+
 X_{1} \leftarrow \boldsymbol{X_{-1}}, Z \\
 X_{2} \leftarrow \boldsymbol{X_{-2}}, Z \\
 X_{3} \leftarrow \boldsymbol{X_{-3}}, Z
+
 \end{array}
 \end{equation}
 
@@ -521,69 +533,3 @@ Chained Equations in R, Journal of Statistical Software
 
 Stata, 2017, Stata Multiple-Imputation Reference Manual, Stata Crop LLC, 
 College Station, Texas
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-3.2  Missing at random (MAR)
-
-When we say that data are missing at random (MAR), we mean that the missing-data mechanism is dependent on the observed data but is independent of the unobserved data. We can think of this mechanism as one that introduces missigness to complete data by changing the values of some variables to missing based on the observed values of other variables belonging to the same record (subject).
-
-In theory, we expect to see difference between complete and MAR data, specifically in the variables affected by missingness.
-
-
-
-Load the dataset. Summarize all variables in `auto.data`
-
-
-```s
-sysuse auto, clear
-sum
-```
-
-Recode repair record.
-
-```s/
-qui recode rep78 1 2 3 = 1 
-```
-
-## Section 2
-
-Plot price vs mpg:
-
-```s
-twoway scatter price mpg, saving(auto, replace) nodraw title("Price vs mpg")
-```
-
-```s/
-qui graph use auto.gph
-qui graph export "auto.png", width(525) replace
-```
-
-<!-- ![](auto.png) -->
-<center>![](auto.png)</center>
-
-
-
-## Section 3
-
-Run a regression of `price` on `mpg`
-
-$y_{i} = \alpha + \beta x_{i} + \epsilon_{i}$
-
-```s/
-reg price mpg
-```
