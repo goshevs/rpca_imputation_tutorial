@@ -47,7 +47,7 @@ table tbody:last-child tr:last-child td {border-bottom:1px solid black;}
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <meta name="author" content="Dale Barnhart, Robert Brenan, Simo Goshev" />
+  <meta name="author" content="Dale Barnhart, Robert Brennan, Simo Goshev" />
   <title>Introduction to Missing Data and Imputation (Session 1)</title>
   <style type="text/css">
       code{white-space: pre-wrap;}
@@ -63,10 +63,11 @@ table tbody:last-child tr:last-child td {border-bottom:1px solid black;}
 <body>
 <header id="title-block-header">
 <h1 class="title">Introduction to Missing Data and Imputation (Session 1)</h1>
-<p class="author">Dale Barnhart, Robert Brenan, Simo Goshev</p>
-<p class="date">4 Oct 2018 , v0.01</p>
+<p class="author">Dale Barnhart, Robert Brennan, Simo Goshev</p>
+<p class="date">5 Oct 2018 , v0.01</p>
 </header>
-<p><em>The following is taken from Simo’s tutorial on missing data</em></p>
+
+<p><em>The following is heavily borrowed from Simo’s tutorial on missing data</em></p>
 <h2 id="missing-data">Missing data</h2>
 <h3 id="what-is-missing-data">What is missing data?</h3>
 <p>Generally we want data to be complete – that is we wish that all individuals we have sampled agree to be interviewed and subsequently provide valid responses to all applicable questions in the questionnaire.</p>
@@ -74,58 +75,43 @@ table tbody:last-child tr:last-child td {border-bottom:1px solid black;}
 <p>Subjects can also decline to answer certain questions or simply skip questions. This is known as <em>item non-response</em> and it manifests as a “gappy” pattern in the dataset.</p>
 <p>Unit and item non-response are the patterns of missingness commonly present in data used in social science research, and missing data, as you can tell already, is simply the full or partial absence of valid values or measurements for one or more subjects for one or more variables.</p>
 <h3 id="why-missing-data-may-be-a-problem">Why missing data may be a problem?</h3>
+<p>We have collected data for a sample of individuals that include person, time and treatment identifiers as well as demographic variables and responses to four psycho-social scales: <code>dmn</code>, <code>hsclg</code>, <code>ka_ecdm</code> and <code>kzf</code>.</p>
+<p>We know that there is some missingness in our data but before we proceed with analyzing the data, we want to know more how serious missigness is and whether the amount of missingness may create problems for our analysis.</p>
+<p>We read the data in look at the first 12 responses (4 subjects observed 3 times) for <code>dmn</code>.</p>
+<pre class='stata'>. use "`data_dir'/missingDataTutorial", clear
+
+. qui list id time ka_ecdm03 ka_ecdm04 ka_ecdm05 ///
+>                 hsclg01 hsclg02 hsclg03 in 1/12
+</pre>
+<p>The number of missing observations in <code>dmn</code> is fairly large. Are the rest of the scales having similar missing data issues? Let’s use command <code>misstable</code> to explore the missingness further.</p>
+<p>We first look at a summary table of the missingness</p>
+<pre class='stata'>. qui misstable summarize, gen(fl)
+</pre>
+<p>Next, we explore the pattern of missingness</p>
+<pre class='stata'>. qui misstable pattern 
+</pre>
+
+<p>It appears that some scales have more missingness than others. The proportion of complete responses is 44%. The proportion of subject who responded to all questions in all waves is 34.375%.</p>
 <h2 id="missing-data-mechanisms">Missing data mechanisms</h2>
-<p>As we will see shortly, there are three distinct missing-data mechanisms talked about in the literature. To understand better these mechanisms and how they defer from each other, we first need to define two terms: <em>observed</em> and <em>unobserved</em> data.</p>
-<p><strong>Observed data</strong> are the values or measurements that a researcher collects. In our example dataset, these would be the recorded values (except for the missing values) of the eight variables.</p>
-<p><strong>Unobserved data</strong> are data that a researcher fails to measure. These data are represented by the missing values in our variables.</p>
+<p>As we will see shortly, there are three distinct missing-data mechanisms defined in the literature. To understand better these mechanisms and how they defer from each other, we first need to define two terms: <em>observed</em> and <em>unobserved</em> data.</p>
+<p><strong>Observed data</strong> are the values or measurements that a researcher collects. In our dataset, these would be the recorded values (except for the missing values) for all variables and items.</p>
+<p><strong>Unobserved data</strong> are data that researchers fails to measure.</p>
 <h3 id="missing-completely-at-random-mcar">Missing completely at random (MCAR)</h3>
 <p>When we say that data are missing completely at random (MCAR), we mean that the missing-data mechanism is independent of both the observed and unobserved data. We can think of MCAR as a mechanism that introduces missigness to complete data by changing, on an entirely independent and random basis, the values of some variables to missing.</p>
 <p>In theory, we would not expect incomplete records (or observations that contain missing values for some variables) to differ systematically from complete records.</p>
-<p>When working with social surveys, very rarely can researchers claim/assume that missingness is MCAR. The reason is that usually there are underlying causes for subjects not to respond, causes which may or may not have been observed by the researcher (as part of the study).</p>
+<p>When working with surveys, very rarely can researchers claim/assume that missingness is MCAR. The reason is that usually there are underlying causes for subjects not to respond, causes which may or may not have been observed by the researcher (as part of the study).</p>
 <h3 id="missing-at-random-mar">Missing at random (MAR)</h3>
-<p>When we say that data are missing at random (MAR), we mean that the missing-data mechanism is dependent on the observed data but is independent of the unobserved data. We can think of this mechanism as one that introduces missigness to complete data by changing the values of some variables to missing based on the observed values of other variables belonging to the same record (subject).</p>
+<p>When we say that data are missing at random (MAR), we mean that the missing-data mechanism is dependent on the observed data but is independent of the unobserved data. We can think of this mechanism as one that introduces missigness to complete data by changing the values of some variables to missing based on the observed values of other, observed variables belonging to the same record (subject).</p>
 <p>In theory, we expect to see difference between complete and MAR data, specifically in the variables affected by missingness.</p>
-<p>Since under MAR the mechanism of the missing data is dependent on the observed data only, we are able to both test (see Little 1988) for this missingness mechanism and address the missingness methodologically.</p>
-<p>When working with social surveys, MAR is the type of mechanism that is commonly assumed. There are standard methods for handling it, some of which we will discuss shortly.</p>
+<p>Since under MAR the mechanism of the missing data is dependent on the observed data only, we are able to both test for this missingness mechanism and address the missingness methodologically.</p>
+<p>When working with surveys, MAR is the type of mechanism that is commonly assumed. There are standard methods for handling it, some of which we will discuss shortly.</p>
 <h3 id="missing-not-at-random-mnar">Missing not at random (MNAR)</h3>
 <p>When we say that data are missing not at random (MNAR), we mean that the missing-data mechanism is dependent on the unobserved data. We can think of this mechanism as one that introduces missigness to complete data by changing the values of some variables to missing based on either the unobserved values of the same variable or the values of other, unobserved variables belonging to the same record.</p>
 <p>With MNAR, we expect incomplete and complete cases to differ systematically. There are several classes of methods that can handle MNAR data of which sample selection models (with the Heckman selection model being the flagship model) is the most popular class in social science.</p>
-<h3 id="why-is-this-distinction-important">Why is this distinction important?</h3>
-<p>We conduct analyses to estimate quantities of interest and we want our estimates to be unbiased (or consistent) and efficient. Missingness can impact both of these characteristics in different ways depending on the underlying missing-data mechanism. The following table offers a summary of the effect of missingness on the characteristics of estimates (assuming again we are using complete cases only):</p>
-<table>
-<thead>
-<tr class="header">
-<th style="text-align: center;">Missingness</th>
-<th style="text-align: center;">Bias</th>
-<th style="text-align: center;">Efficiency</th>
-<th style="text-align: center;">Can be corrected?</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: center;">MCAR</td>
-<td style="text-align: center;">No</td>
-<td style="text-align: center;">Lesser</td>
-<td style="text-align: center;">Yes</td>
-</tr>
-<tr class="even">
-<td style="text-align: center;">MAR</td>
-<td style="text-align: center;">? Yes</td>
-<td style="text-align: center;">? Lesser</td>
-<td style="text-align: center;">Yes</td>
-</tr>
-<tr class="odd">
-<td style="text-align: center;">MNAR</td>
-<td style="text-align: center;">? Yes</td>
-<td style="text-align: center;">? Lesser</td>
-<td style="text-align: center;">? Yes</td>
-</tr>
-</tbody>
-</table>
 <h2 id="strategies-for-handling-anticipated-missingness">Strategies for Handling (Anticipated) Missingness</h2>
 <p>We have seen so far that missingness may impact the estimates of quantities of interest. Data collectors and applied researchers utilize a variety of strategies and methods to minimize or mitigate the impact of missingness.</p>
 <h3 id="prior-to-data-collection">Prior to data collection</h3>
-<p>As the old saying goes, “Design trumps model”. And it could not be more relevant to addressing missingness. To minimize missingness, the data collector has to maximize effort in designing a solid data collection plan (containing various provisions and fallbacks) and executing it with a high level of fidelity.</p>
+<p><em>“Design trumps model”</em> the old saying goes, and it could not be more relevant to addressing missingness. To minimize missingness, the data collector has to maximize effort in designing a solid data collection plan (containing various provisions and fallbacks) and executing it with a high level of fidelity.</p>
 <h4 id="oversampling">Oversampling</h4>
 <p>At the stage of survey sampling design, it is almost always advisable to provision for oversampling. Oversampling means that we will sample more subjects that we think we would need. How many more subject you may ask? Well, some survey agencies sample 5% more, others sample 10% more. It all depends on the amount of missingness or non-response one might expect (and also of course on cost).</p>
 <p>If in doubt, it is always recommended to ask a survey design specialist and/or someone very familiar with the population that will give rise to the sample.</p>
@@ -139,15 +125,16 @@ table tbody:last-child tr:last-child td {border-bottom:1px solid black;}
 </ul>
 <h4 id="rigor-during-data-collection">Rigor during data collection</h4>
 <p>Once a respondent agrees to participate, we want to help them provide a complete response. This may mean working around respondent’s constraints or employing some form of incentivisation. We always want to consult with the Institutional Review Board’s (IRB) about acceptable forms of incentivising response.</p>
+<p>We also want to avoid strategies that will create perverse incentives as they are likely to ruin our study!</p>
 <h3 id="after-data-collection">After data collection</h3>
 <p>Despite our best effort during the planning and collection stages, our data may still be subject to missingness. What can we do ex-post?</p>
 <h4 id="weighting">Weighting</h4>
 <p>Weighting, or adjusting the relative contribution of respondents’ data to estimated quantities of interest, is a popular way of correcting for unit and item non-response.</p>
-<p>One of the most popular weighting techniques involves calculating probability of reponse weights for each subject in the sample and then using these weights in subsequent analyses. This technique is known as <em>inverse probability weighting</em> (IPW). In the context of a MAR dataset where subjects in the middle age-range skipped or declined questions on income, exercise and education (the process we had previously), IPW could be implemented in the following manner: we would predict the probability of a complete response for every subject as a function of age, and then use the inverse of the predicted probabilities as a probability weight in our complete-case regression of happiness on physical exercise.</p>
-<hr />
+<p>A commonly used weighting techniques (in the past) involves calculating probability of reponse weights for each subject in the sample and then using these weights in subsequent analyses. This technique is known as <em>inverse probability weighting</em> (IPW). IPW are commonly implemented in the following manner: we would predict the probability of a complete response for every subject as a function of their observables and then use the inverse of the predicted probabilities as a probability weight in our complete-case analysis.</p>
 <p><em>What does IPW really do for us?</em></p>
-<p>Suppose the likelihood of responding of a person of a specific age is 1. This means that everyone of this age would respond to the income, exercise and education questions and therefore everyone of this age for the purpose of our analysis would be counted once. Now, suppose the likelihood of responding to three questions for a person of a different age is 0.5. This means that we would expect only half of the people of this age to respond and therefore everyone who actually responds will be given a weight of 2, or will be counted twice: once for themselves and once for a respondent of the same age who did not respond. With a likelihood of 0.1, everyone of the same age who responded will represent themselves and 9 other non-responders of the same age.</p>
-<hr />
+<p>Suppose the likelihood of a complete response of a person with specific charasterics is 1. The weight that we will assign to this individual would therefore be 1 which in effect means that they will be counted once in the sample – they will only represent themselves as everyone else with the same characteristics would have provided a complete response as well.</p>
+<p>Now, suppose the likelihood of a complete response of a person with a different set of characteristics is 0.5. This means that we would expect only half of the people with the same charastestics to provide a complete response. Therefore everyone who actually responded to all questions will be given a weight of 2, or will be counted twice: once for themselves and once for a respondent with same characteristics who did not respond.</p>
+<p>With likelihood of 0.1, everyone with same characteristics who responds will represent themselves and 9 other non-responders like them.</p>
 <p><em>Two-phase estimation for missing data</em></p>
 <p>This is a method that assumes the following process governing missingness:</p>
 <p>Phase 1: Original sample selected and variables without missing values are measured<br />
@@ -191,7 +178,7 @@ Phase 2: A subset of respondents is selected and the remaining variable are obse
 <p>While with IPW weighting methods we model the probability of complete cases and mulitple imputation models the distribution of missing variables, DRM combine the two approaches. Generally, DRM use two models: one predicts the missing values and the other predicts the missing probabilities (which are used as weights). There are both parametric and semi-parametric implemetations of DRM but they have remained somewhat on the sidelines in social science research.</p>
 <p><br> <br></p>
 <h2 id="multiple-imputation">Multiple Imputation</h2>
-<p>Multiple imputation methods fall under two broad categories: <em>univariate</em> MI methods and <em>multivariate</em> MI methods. We use univariate methods for multiple imputation if missingness is MAR and we wish to impute the missing values of a single variable. In comparison, multivariate mulitple imputation (MMI) methods are helpful if (missingness is MAR and) we wish to impute multiple variables with missing values simultaneously and in relation to one other.</p>
+<p>Multiple imputation methods fall under two broad categories: <em>univariate</em> MI methods and <em>multivariate</em> MI methods. We use univariate methods for multiple imputation if missingness is MCAR or MAR and we wish to impute the missing values of a single variable. In comparison, multivariate multiple imputation (MMI) methods are helpful if (missingness is MCAR or MAR and) we wish to impute multiple variables with missing values simultaneously while (hopefully!) preserving the relationships among them.</p>
 <p>This ability to allow for relationships among the variables (missing or non-missing) in a dataset is what makes the MMI methods so popular in social science research. We will focus on three distinct flavors of MMI in order of specification flexibility they provide: imputation using multivariate normal regression, imputation in monotone data, and chained imputation.</p>
 <h3 id="imputation-using-multivariate-normal-regression">Imputation using multivariate normal regression</h3>
 <p>This method of imputation can be used when imputing one or more continuous variables. It uses multivariate normal regression to model the mean function and Markov Chain Monte Carlo to impute the missing values.</p>
@@ -206,6 +193,32 @@ Phase 2: A subset of respondents is selected and the remaining variable are obse
 <hr />
 <p>The imputation algorithm has two steps: an <em>imputation</em> step and a <em>posterior</em> step. In the imputation step, the missing values are replaced by draws from our target distribution – a multivariate normal distribution, conditional on the observed data and current values of the model parameters. In the posterior step, new values of the model parameters and variance are drawn from their respective distributions, conditional on the observed data and the imputed values from the previous imputation step. This procedure is repeated until a pre-specified number of iterations is reached.</p>
 <p>An obvious disadvantage of this method is that it only works for imputing continuous variables (that need to follow a normal distribution). This is a pretty significant limitation considering the variety of variable types that are present in social science data.</p>
+<p>Let us apply this method to three of the items of scale <code>hsclg</code>.</p>
+
+<pre class='stata'>. mi set flong
+
+. mi register imputed ka_ecdm03_tp0 ka_ecdm04_tp0 ka_ecdm05_tp0 ///
+>                 hsclg01_tp1 hsclg02_tp1 hsclg03_tp1 ///
+>                 hsclg01_tp0 hsclg02_tp0 hsclg03_tp0
+(17 m=0 obs. now marked as incomplete)
+
+. 
+. snapshot save, label("original-data")
+snapshot 1 (original-data) created at 5 Oct 2018 15:58
+
+. 
+. qui mi impute mvn ka_ecdm03_tp0 ka_ecdm04_tp0 ka_ecdm05_tp0 ///
+>           hsclg01_tp1 hsclg02_tp1 hsclg03_tp1 = base_cg_age i.base_cg_educat ///    
+>           i.family_structure i.rct_arm, add(5)  saveptrace(mytrace, replace)
+</pre>
+<p>The next step is to check convergence. We use command <code>mi ptrace</code> to retrieve the iteration logs and plot the coefficient estimates of age for each of the three imputed variables.</p>
+
+<p><img src="mvn_age.png" /></p>
+<p>Autocorrelation plot of the same thing:</p>
+
+<p><img src="mvn_age_ac.png" /></p>
+<p>As we can see, there is some correlation between iterations in the simulated values of the parameters on age.</p>
+<p>Two parameters of importance: <code>burnin</code> and <code>burnbetween</code>.</p>
 <h3 id="imputation-in-monotone-data">Imputation in monotone data</h3>
 <p>To understand this method, first we need to define the term “monotone missing pattern”. Data exhibit a monotone missing pattern if missingness in variable <span class="math inline">\(Y_{j}\)</span> for subject <em>i</em> means that variables <span class="math inline">\(Y_{k}\)</span>, where <span class="math inline">\(k &gt; j\)</span> for subject <em>i</em> are also missing.</p>
 <p>The presence of a monotone missing pattern in data simplifies the imputation task by reducing it to a sequence of independent univariate (possibly conditional) imputation tasks.</p>
@@ -220,6 +233,14 @@ X_{3}^{*} \leftarrow X_{1}^{*}, X_{2}^{*}, Z
 \end{array}
 \end{equation}\]</span></p>
 <p>The advantages of this method are that not only can we simplify the imputation task but we can also specify univariate models that correspond to the types of variables we are imputing. This is a rather big improvement over the method of multivariate normal regression. The disadvantage is that it is quite uncommon for data to have a monotone missing pattern.</p>
+<p>Stata’s command is <code>mi impute monotone</code>.</p>
+<pre class='stata'>. snapshot restore 1
+
+. qui misstable pattern  hsclg01_tp0 hsclg02_tp0 hsclg03_tp0
+
+. qui mi impute monotone (ologit) hsclg01_tp0 hsclg02_tp0 hsclg03_tp0 = base_cg_age i.base_cg_educat ///    
+>           i.family_structure i.rct_arm, add(5) augment
+</pre>
 <h3 id="multiple-imputation-using-chained-equations">Multiple imputation using chained equations</h3>
 <p>Multiple imputation using chained equations (MICE) is the most popular method for imputation in social science research. Its popularity is based primarily on its ability to impute multiple variables of different types simultaneously and conditional on one another.</p>
 <p>One iteration of the imputation algorithm has the following general logic:</p>
@@ -233,6 +254,26 @@ X_{3} \leftarrow \boldsymbol{X_{-3}}, Z
 \end{array}
 \end{equation}\]</span></p>
 <p>In essence, MICE is based on a series of univariate imputation models, each of which is selected to correspond to the type of variable ( e.g. continuous, categorical, proportion, etc.) that is being imputed. It uses chained equations, meaning that an outcome in one imputation equation by default (and this can be customized) is a predictor in all other equations. MICE is similar in logic to MCMC in that it builds a chain, iterates until the chain attains its stationary distribution and samples from it to replace the missing observations.</p>
+<p>Let’s apply this method to the same items we used before:</p>
+<pre class='stata'>. snapshot restore 1
+
+. qui mi impute chained (regress) ka_ecdm03_tp0 ka_ecdm04_tp0 ka_ecdm05_tp0 ///
+>               (ologit, augment) hsclg01_tp1 hsclg02_tp1 hsclg03_tp1 = base_cg_age i.base_cg_educat ///    
+>                i.family_structure i.rct_arm, add(5) burnin(10) chaindots savetrace(mytrace, replace)
+</pre>
+<p>Diagnostics:</p>
+
+<p><img src="chained.png" /></p>
+<p>Autocorrelation plot for the first three chains:</p>
+
+<p><img src="cchained_age_ac.png" /></p>
+<h2 id="what-do-we-need-all-these-imputations-for">What do we need all these imputations for???</h2>
+<p>To produce estimates of quantities of interest. To do that, we use Stata’ command <code>mi estimate</code>.</p>
+<p>For instance, say we wanted to estimate the means of ka_ecdm03 across time. We would do:</p>
+<pre class='stata'>. qui {
+
+. qui mi estimate: mean ka_ecdm03_tp, over(time)
+</pre>
 <hr />
 <p><em>Some ‘ground rules’ of imputation</em></p>
 <p>Multiple imputation is an extremely useful technique that can help us tackle missing data problems in a principled and statistically sound manner. However, practitioners should remain vigilent and not fall into some common pitfalls associated with the procedure.</p>
@@ -244,8 +285,6 @@ X_{3} \leftarrow \boldsymbol{X_{-3}}, Z
 <li>The amount of missingness and sample size matter for the performance of imputation routines! The rule of thumb is that missingness of about 10% is manageable, and missingness of 25% is high and likely problematic, especially in samples of smaller size.</li>
 </ul>
 <hr />
-<h2 id="imputation-in-panel-data">Imputation in panel data</h2>
-<p>Imputing panel data is similar to imputing cross-sectional data. Before imputation however, we would reshape the data from long to wide form. This is really important as imputation routines do not normally know the ways in which observations are be related and if the data are imputed while still in long form, in essence, the software would be making the assumption that observations of the same individual for different time periods are uncorrelated; and that would be a silly thing to assume!</p>
 <h2 id="references">References</h2>
 <p>Mack C, Su Z, Westreich D. Rockville (MD): Agency for Healthcare Research and Quality (US); 2018 Feb.</p>
 <p>Little, R. J. A. 1988. A test of missing completely at random for multivariate data with missing values. Journal of the American Statistical Association 83: 1198–1202.</p>

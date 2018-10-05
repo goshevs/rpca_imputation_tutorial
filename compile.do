@@ -6,7 +6,7 @@
 
 clear all
 set more off
-
+snapshot erase _all
 
 ********************************************************************************
 *** User-specific directory definitions
@@ -114,7 +114,7 @@ foreach file of local mvContentPdf {
 *** clean up root dir
 local rmContent: dir . files "*"
 foreach f of local rmContent {
-	if regexm("`f'", "\.(gph)?(smcl)?$") {
+	if regexm("`f'", "\.(gph|smcl|dta|stptrace)?$") {
 		erase `f'
 	}
 }
