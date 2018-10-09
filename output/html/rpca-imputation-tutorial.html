@@ -5,26 +5,29 @@
 /* CSS for Markstat 2.0 using Pandoc 2.0 */
 /* Adapted from original */
 
-html{width:70%; margin:2rem auto;}
-body{padding:14px 28px;}
+html{width:70%; margin:2rem auto;background-color: lightgray;}
+body{background-color: white; padding: 6rem 9rem;}
 body, table {font-family: Helvetica, Arial, Sans-serif; font-size: 14px;}
 h1, h2, h3, h4 {font-weight: normal; color: #000}
-h1 {font-size: 200%;}
-h2 {font-size: 150%;}
-h3 {font-size: 120%;}
+h1 {font-size: 200%; font-weight: bold;}
+h2 {font-size: 150%; font-weight: bold; margin-top: 4rem;}
+h3 {font-size: 120%; font-weight: bold; margin-top: 3rem;}
 h4 {font-size: 100%; font-weight:bold}
-img.center {display:block; margin-left:auto; margin-right:auto}
+img, img.center {display:block; margin-left:auto; margin-right:auto;margin-top:2rem; margin-bottom:2rem}
 .small{font-size:8pt;}
 a {color: black;}
 a:visited {color: #808080;}
 a.plain {text-decoration:none;}
 a.plain:hover {text-decoration:underline;}
 .em {font-weight:bold;}
-pre, code {font-family: "lucida console", monospace;}
+pre, code {font-family: "lucida console", monospace; margin: 2rem auto;}
 pre.stata {font-size:13px; line-height:13px;}
 pre {padding:8px; border:1px solid #c0c0c0; border-radius:8px; background-color:#fdfdfd;}
 code {color:#000; background-color:#efefef;}
 pre code { color:black; background-color:white}
+hr {margin: 2rem auto; width: 25rem;}
+	
+
 
 /* Added for Pandoc */
 figure > img, div.figure > img {display:block; margin:auto}
@@ -64,10 +67,10 @@ table tbody:last-child tr:last-child td {border-bottom:1px solid black;}
 <header id="title-block-header">
 <h1 class="title">Introduction to Missing Data and Imputation (Session 1)</h1>
 <p class="author">Dale Barnhart, Robert Brennan, Simo Goshev</p>
-<p class="date">5 Oct 2018 , v0.01</p>
+<p class="date">9 Oct 2018 , v0.01</p>
 </header>
 
-<p><em>The following is heavily borrowed from Simo’s tutorial on missing data</em></p>
+<p><em>The following borrows heavily from Simo’s tutorial on missing data</em></p>
 <h2 id="missing-data">Missing data</h2>
 <h3 id="what-is-missing-data">What is missing data?</h3>
 <p>Generally we want data to be complete – that is we wish that all individuals we have sampled agree to be interviewed and subsequently provide valid responses to all applicable questions in the questionnaire.</p>
@@ -75,23 +78,171 @@ table tbody:last-child tr:last-child td {border-bottom:1px solid black;}
 <p>Subjects can also decline to answer certain questions or simply skip questions. This is known as <em>item non-response</em> and it manifests as a “gappy” pattern in the dataset.</p>
 <p>Unit and item non-response are the patterns of missingness commonly present in data used in social science research, and missing data, as you can tell already, is simply the full or partial absence of valid values or measurements for one or more subjects for one or more variables.</p>
 <h3 id="why-missing-data-may-be-a-problem">Why missing data may be a problem?</h3>
-<p>We have collected data for a sample of individuals that include person, time and treatment identifiers as well as demographic variables and responses to four psycho-social scales: <code>dmn</code>, <code>hsclg</code>, <code>ka_ecdm</code> and <code>kzf</code>.</p>
-<p>We know that there is some missingness in our data but before we proceed with analyzing the data, we want to know more how serious missigness is and whether the amount of missingness may create problems for our analysis.</p>
-<p>We read the data in look at the first 12 responses (4 subjects observed 3 times) for <code>dmn</code>.</p>
-<pre class='stata'>. use "`data_dir'/missingDataTutorial", clear
+<p>We have collected data for a sample of individuals that include person, time and treatment identifiers as well as demographic variables and responses to four psycho-social scales: <code>s1</code>, <code>s2</code>, <code>s3</code> and <code>s4</code>.</p>
+<p>We know that there is some missingness in our data but before we proceed with analyzing the data, we want to know more about how serious missigness is and whether the amount of missingness may create problems for our analysis.</p>
+<p>We read the data in look at the first 12 responses (4 subjects observed 3 times) for <code>s1</code>.</p>
+<pre class='stata'>. simdata 200 3
 
-. qui list id time ka_ecdm03 ka_ecdm04 ka_ecdm05 ///
->                 hsclg01 hsclg02 hsclg03 in 1/12
+. list id time s1_i* s2_i* in 1/30
+
+     ┌───────────────────────────────────────────────────┐
+     │ id   time   s1_i1   s1_i2   s1_i3   s2_i1   s2_i2 │
+     ├───────────────────────────────────────────────────┤
+  1. │  1      1       1       1       0       2       2 │
+  2. │  1      2       1       0       0       3       1 │
+  3. │  1      3       1       0       1       3       2 │
+  4. │  2      1       1       2       1       5       . │
+  5. │  2      2       2       2       1       2       2 │
+     ├───────────────────────────────────────────────────┤
+  6. │  2      3       2       1       2       2       5 │
+  7. │  3      1       0       0       0       .       1 │
+  8. │  3      2       0       0       0       0       0 │
+  9. │  3      3       0       0       0       0       3 │
+ 10. │  4      1       0       0       0       0       0 │
+     ├───────────────────────────────────────────────────┤
+ 11. │  4      2       0       0       0       2       2 │
+ 12. │  4      3       0       0       0       3       0 │
+ 13. │  5      1       0       1       1       3       2 │
+ 14. │  5      2       0       0       0       4       2 │
+ 15. │  5      3       0       1       1       2       4 │
+     ├───────────────────────────────────────────────────┤
+ 16. │  6      1       0       0       0       1       0 │
+ 17. │  6      2       0       0       0       2       0 │
+ 18. │  6      3       .       0       1       2       0 │
+ 19. │  7      1       2       1       2       4       5 │
+ 20. │  7      2       1       1       2       1       1 │
+     ├───────────────────────────────────────────────────┤
+ 21. │  7      3       1       1       .       4       2 │
+ 22. │  8      1       0       0       0       0       0 │
+ 23. │  8      2       0       1       0       1       1 │
+ 24. │  8      3       0       0       0       2       0 │
+ 25. │  9      1       1       1       2       0       3 │
+     ├───────────────────────────────────────────────────┤
+ 26. │  9      2       1       2       1       4       3 │
+ 27. │  9      3       1       2       1       1       4 │
+ 28. │ 10      1       0       1       1       4       1 │
+ 29. │ 10      2       1       0       1       4       2 │
+ 30. │ 10      3       0       1       0       1       4 │
+     └───────────────────────────────────────────────────┘
 </pre>
-<p>The number of missing observations in <code>dmn</code> is fairly large. Are the rest of the scales having similar missing data issues? Let’s use command <code>misstable</code> to explore the missingness further.</p>
+<p>Are the rest of the scales look similar? Let’s use command <code>misstable</code> to explore the missingness further.</p>
 <p>We first look at a summary table of the missingness</p>
-<pre class='stata'>. qui misstable summarize, gen(fl)
+<pre class='stata'>. misstable summarize, gen(fl)
+                                                               Obs&lt;.
+                                                ┌──────────────────────────────
+               │                                │ Unique
+      Variable │     Obs=.     Obs>.     Obs&lt;.  │ values        Min         Max
+  ─────────────┼────────────────────────────────┼──────────────────────────────
+         s1_i1 │        30                 570  │      5          0           4
+         s1_i2 │        29                 571  │      5          0           4
+         s1_i3 │        35                 565  │      5          0           4
+         s2_i1 │        41                 559  │      8          0           7
+         s2_i2 │        34                 566  │      7          0           6
+         s3_i1 │        27                 573  │      2          0           1
+         s3_i2 │        26                 574  │      2          0           1
+         s3_i3 │        28                 572  │      2          0           1
+         s3_i4 │        36                 564  │      2          0           1
+         s4_i1 │        32                 568  │   >500          0    51.90791
+         s4_i2 │        34                 566  │   >500          0    52.10009
+         s4_i3 │        23                 577  │   >500          0     52.0597
+         s4_i4 │        35                 565  │   >500          0    51.07303
+  ─────────────┴────────────────────────────────┴──────────────────────────────
 </pre>
 <p>Next, we explore the pattern of missingness</p>
-<pre class='stata'>. qui misstable pattern 
+<pre class='stata'>. misstable pattern, bypat
+
+                    Missing-value patterns
+                      (1 means complete)
+
+              │   Pattern
+    Percent   │  1  2  3  4    5  6  7  8    9 10 11 12   13
+  ────────────┼──────────────────────────────────────────────
+       49%    │  1  1  1  1    1  1  1  1    1  1  1  1    1
+              │
+  1:          │
+        4     │  1  1  1  1    1  1  1  1    1  1  1  1    0
+        4     │  1  1  1  1    1  1  1  1    1  1  1  0    1
+        3     │  1  1  1  1    1  1  1  1    1  1  0  1    1
+        3     │  1  1  1  1    1  1  1  1    1  0  1  1    1
+        3     │  1  1  1  1    1  1  1  1    0  1  1  1    1
+        3     │  1  1  1  1    1  1  1  0    1  1  1  1    1
+        2     │  1  1  1  1    1  1  0  1    1  1  1  1    1
+        3     │  1  1  1  1    1  0  1  1    1  1  1  1    1
+        2     │  1  1  1  1    0  1  1  1    1  1  1  1    1
+        3     │  1  1  1  0    1  1  1  1    1  1  1  1    1
+        2     │  1  1  0  1    1  1  1  1    1  1  1  1    1
+        3     │  1  0  1  1    1  1  1  1    1  1  1  1    1
+        2     │  0  1  1  1    1  1  1  1    1  1  1  1    1
+  2:          │
+       &lt;1     │  1  1  1  1    1  1  1  1    1  1  0  1    0
+       &lt;1     │  1  1  1  1    1  1  1  1    1  0  1  1    0
+       &lt;1     │  1  1  1  1    1  1  1  1    1  0  1  0    1
+       &lt;1     │  1  1  1  1    1  1  1  1    1  0  0  1    1
+       &lt;1     │  1  1  1  1    1  1  1  1    0  1  1  1    0
+       &lt;1     │  1  1  1  1    1  1  1  1    0  1  1  0    1
+       &lt;1     │  1  1  1  1    1  1  1  1    0  0  1  1    1
+       &lt;1     │  1  1  1  1    1  1  1  0    1  1  1  1    0
+       &lt;1     │  1  1  1  1    1  1  1  0    1  1  1  0    1
+       &lt;1     │  1  1  1  1    1  1  1  0    1  1  0  1    1
+       &lt;1     │  1  1  1  1    1  1  1  0    1  0  1  1    1
+       &lt;1     │  1  1  1  1    1  1  1  0    0  1  1  1    1
+       &lt;1     │  1  1  1  1    1  1  0  1    1  1  1  1    0
+       &lt;1     │  1  1  1  1    1  1  0  1    1  1  1  0    1
+       &lt;1     │  1  1  1  1    1  1  0  1    1  1  0  1    1
+       &lt;1     │  1  1  1  1    1  1  0  1    1  0  1  1    1
+       &lt;1     │  1  1  1  1    1  0  1  1    1  1  1  1    0
+       &lt;1     │  1  1  1  1    1  0  1  1    1  1  1  0    1
+       &lt;1     │  1  1  1  1    1  0  1  1    1  1  0  1    1
+       &lt;1     │  1  1  1  1    1  0  0  1    1  1  1  1    1
+       &lt;1     │  1  1  1  1    0  1  1  1    1  1  1  1    0
+       &lt;1     │  1  1  1  1    0  1  1  1    1  1  1  0    1
+       &lt;1     │  1  1  1  1    0  1  1  1    1  1  0  1    1
+       &lt;1     │  1  1  1  1    0  1  1  1    0  1  1  1    1
+       &lt;1     │  1  1  1  1    0  1  0  1    1  1  1  1    1
+       &lt;1     │  1  1  1  1    0  0  1  1    1  1  1  1    1
+       &lt;1     │  1  1  1  0    1  1  1  1    1  1  1  1    0
+       &lt;1     │  1  1  1  0    1  1  1  1    1  1  1  0    1
+       &lt;1     │  1  1  1  0    1  1  1  1    1  1  0  1    1
+       &lt;1     │  1  1  1  0    1  1  1  1    0  1  1  1    1
+       &lt;1     │  1  1  1  0    1  1  0  1    1  1  1  1    1
+       &lt;1     │  1  1  1  0    1  0  1  1    1  1  1  1    1
+       &lt;1     │  1  1  0  1    1  1  1  1    1  1  1  1    0
+       &lt;1     │  1  1  0  1    1  1  1  1    1  1  1  0    1
+       &lt;1     │  1  1  0  1    1  1  1  1    0  1  1  1    1
+       &lt;1     │  1  1  0  1    1  1  1  0    1  1  1  1    1
+       &lt;1     │  1  1  0  1    1  1  0  1    1  1  1  1    1
+       &lt;1     │  1  1  0  1    1  0  1  1    1  1  1  1    1
+       &lt;1     │  1  0  1  1    1  1  1  1    1  1  1  1    0
+       &lt;1     │  1  0  1  1    1  1  1  1    1  0  1  1    1
+       &lt;1     │  1  0  1  1    1  1  0  1    1  1  1  1    1
+       &lt;1     │  1  0  1  0    1  1  1  1    1  1  1  1    1
+       &lt;1     │  1  0  0  1    1  1  1  1    1  1  1  1    1
+       &lt;1     │  0  1  1  1    1  1  1  1    1  1  1  1    0
+       &lt;1     │  0  1  1  1    1  1  1  1    1  0  1  1    1
+       &lt;1     │  0  1  1  1    1  1  1  1    0  1  1  1    1
+       &lt;1     │  0  1  1  1    1  1  1  0    1  1  1  1    1
+       &lt;1     │  0  1  1  1    1  1  0  1    1  1  1  1    1
+       &lt;1     │  0  1  1  1    0  1  1  1    1  1  1  1    1
+  3:          │
+       &lt;1     │  1  1  1  1    1  1  0  0    1  1  1  0    1
+       &lt;1     │  1  1  1  1    1  0  1  1    1  1  0  1    0
+       &lt;1     │  1  1  1  1    1  0  0  1    1  1  0  1    1
+       &lt;1     │  1  1  1  0    1  1  1  0    1  0  1  1    1
+       &lt;1     │  1  1  0  1    0  1  1  0    1  1  1  1    1
+       &lt;1     │  1  0  1  1    1  1  1  1    1  1  0  1    0
+       &lt;1     │  1  0  1  0    1  1  1  0    1  1  1  1    1
+  4:          │
+       &lt;1     │  1  1  1  1    1  0  0  0    1  0  1  1    1
+       &lt;1     │  0  1  1  1    1  1  0  1    1  1  0  0    1
+       &lt;1     │  0  0  1  0    1  1  0  1    1  1  1  1    1
+  ────────────┼──────────────────────────────────────────────
+      100%    │
+
+  Variables are  (1) s4_i3  (2) s3_i2  (3) s3_i1  (4) s3_i3  (5) s1_i2  (6) s1_i1  (7) s4_i1
+                 (8) s4_i2  (9) s2_i2  (10) s4_i4  (11) s1_i3  (12) s3_i4  (13) s2_i1
 </pre>
 
-<p>It appears that some scales have more missingness than others. The proportion of complete responses is 44%. The proportion of subject who responded to all questions in all waves is 34.375%.</p>
+<p>It appears that some scales have more missingness than others. The proportion of complete responses is 49%. The proportion of subject who responded to all questions in all waves is 119%.</p>
 <h2 id="missing-data-mechanisms">Missing data mechanisms</h2>
 <p>As we will see shortly, there are three distinct missing-data mechanisms defined in the literature. To understand better these mechanisms and how they defer from each other, we first need to define two terms: <em>observed</em> and <em>unobserved</em> data.</p>
 <p><strong>Observed data</strong> are the values or measurements that a researcher collects. In our dataset, these would be the recorded values (except for the missing values) for all variables and items.</p>
@@ -193,30 +344,53 @@ Phase 2: A subset of respondents is selected and the remaining variable are obse
 <hr />
 <p>The imputation algorithm has two steps: an <em>imputation</em> step and a <em>posterior</em> step. In the imputation step, the missing values are replaced by draws from our target distribution – a multivariate normal distribution, conditional on the observed data and current values of the model parameters. In the posterior step, new values of the model parameters and variance are drawn from their respective distributions, conditional on the observed data and the imputed values from the previous imputation step. This procedure is repeated until a pre-specified number of iterations is reached.</p>
 <p>An obvious disadvantage of this method is that it only works for imputing continuous variables (that need to follow a normal distribution). This is a pretty significant limitation considering the variety of variable types that are present in social science data.</p>
-<p>Let us apply this method to three of the items of scale <code>hsclg</code>.</p>
+<p>Let us apply this method to three of the items of scale <code>s1</code>. First, we reshape the dataset to wide form.</p>
 
+<p>Then we declare imputed variables and collect all items of a scale in a respective list.</p>
 <pre class='stata'>. mi set flong
 
-. mi register imputed ka_ecdm03_tp0 ka_ecdm04_tp0 ka_ecdm05_tp0 ///
->                 hsclg01_tp1 hsclg02_tp1 hsclg03_tp1 ///
->                 hsclg01_tp0 hsclg02_tp0 hsclg03_tp0
-(17 m=0 obs. now marked as incomplete)
+. mi register imputed s1_i* s2_i* s3_i* s4_i*
+(181 m=0 obs. now marked as incomplete)
+</pre>
 
-. 
-. snapshot save, label("original-data")
-snapshot 1 (original-data) created at 5 Oct 2018 15:58
+<p>Finally, we impute the missing values of item 1 in scale 1.</p>
+<pre class='stata'>. mi impute mvn `s1' = x1* i.x2* x3* y*, add(5)  saveptrace(mytrace, replace)
+note: x12 omitted because of collinearity
+note: x13 omitted because of collinearity
 
-. 
-. qui mi impute mvn ka_ecdm03_tp0 ka_ecdm04_tp0 ka_ecdm05_tp0 ///
->           hsclg01_tp1 hsclg02_tp1 hsclg03_tp1 = base_cg_age i.base_cg_educat ///    
->           i.family_structure i.rct_arm, add(5)  saveptrace(mytrace, replace)
+Performing EM optimization:
+note: x12 omitted because of collinearity
+note: x13 omitted because of collinearity
+  observed log likelihood =  15.724247 at iteration 9
+
+Performing MCMC data augmentation ... 
+
+Multivariate imputation                     Imputations =        5
+Multivariate normal regression                    added =        5
+Imputed: m=1 through m=5                        updated =        0
+
+Prior: uniform                               Iterations =      500
+                                                burn-in =      100
+                                                between =      100
+
+───────────────────┬──────────────────────────────────────────────
+                   │               Observations per m             
+                   ├───────────────────────────────────┬──────────
+          Variable │   Complete   Incomplete   Imputed │     Total
+───────────────────┼───────────────────────────────────┼──────────
+         s1_i1_tp1 │        188           12        12 │       200
+         s1_i1_tp2 │        192            8         8 │       200
+         s1_i1_tp3 │        190           10        10 │       200
+───────────────────┴───────────────────────────────────┴──────────
+(complete + incomplete = total; imputed is the minimum across m
+ of the number of filled-in observations.)
 </pre>
 <p>The next step is to check convergence. We use command <code>mi ptrace</code> to retrieve the iteration logs and plot the coefficient estimates of age for each of the three imputed variables.</p>
 
-<p><img src="mvn_age.png" /></p>
+<p><img src="mvn_s1_i1.png" /></p>
 <p>Autocorrelation plot of the same thing:</p>
 
-<p><img src="mvn_age_ac.png" /></p>
+<p><img src="mvn_s1_i1_ac.png" /></p>
 <p>As we can see, there is some correlation between iterations in the simulated values of the parameters on age.</p>
 <p>Two parameters of importance: <code>burnin</code> and <code>burnbetween</code>.</p>
 <h3 id="imputation-in-monotone-data">Imputation in monotone data</h3>
@@ -234,13 +408,6 @@ X_{3}^{*} \leftarrow X_{1}^{*}, X_{2}^{*}, Z
 \end{equation}\]</span></p>
 <p>The advantages of this method are that not only can we simplify the imputation task but we can also specify univariate models that correspond to the types of variables we are imputing. This is a rather big improvement over the method of multivariate normal regression. The disadvantage is that it is quite uncommon for data to have a monotone missing pattern.</p>
 <p>Stata’s command is <code>mi impute monotone</code>.</p>
-<pre class='stata'>. snapshot restore 1
-
-. qui misstable pattern  hsclg01_tp0 hsclg02_tp0 hsclg03_tp0
-
-. qui mi impute monotone (ologit) hsclg01_tp0 hsclg02_tp0 hsclg03_tp0 = base_cg_age i.base_cg_educat ///    
->           i.family_structure i.rct_arm, add(5) augment
-</pre>
 <h3 id="multiple-imputation-using-chained-equations">Multiple imputation using chained equations</h3>
 <p>Multiple imputation using chained equations (MICE) is the most popular method for imputation in social science research. Its popularity is based primarily on its ability to impute multiple variables of different types simultaneously and conditional on one another.</p>
 <p>One iteration of the imputation algorithm has the following general logic:</p>
@@ -254,26 +421,202 @@ X_{3} \leftarrow \boldsymbol{X_{-3}}, Z
 \end{array}
 \end{equation}\]</span></p>
 <p>In essence, MICE is based on a series of univariate imputation models, each of which is selected to correspond to the type of variable ( e.g. continuous, categorical, proportion, etc.) that is being imputed. It uses chained equations, meaning that an outcome in one imputation equation by default (and this can be customized) is a predictor in all other equations. MICE is similar in logic to MCMC in that it builds a chain, iterates until the chain attains its stationary distribution and samples from it to replace the missing observations.</p>
-<p>Let’s apply this method to the same items we used before:</p>
-<pre class='stata'>. snapshot restore 1
+<p>Let’s apply this method to items 1 of scales 1 and 4:</p>
 
-. qui mi impute chained (regress) ka_ecdm03_tp0 ka_ecdm04_tp0 ka_ecdm05_tp0 ///
->               (ologit, augment) hsclg01_tp1 hsclg02_tp1 hsclg03_tp1 = base_cg_age i.base_cg_educat ///    
->                i.family_structure i.rct_arm, add(5) burnin(10) chaindots savetrace(mytrace, replace)
+<pre class='stata'>. mi impute chained (regress) `s4' (ologit, augment) `s1' = x1* x2* x3* y*, ///
+>         add(5) burnin(100) chaindots savetrace(mytrace, replace)
+
+Conditional models:
+         s4_i1_tp3: regress s4_i1_tp3 i.s1_i1_tp2 s4_i1_tp2 i.s1_i1_tp3 i.s1_i1_tp1 s4_i1_tp1 x11
+                     x12 x13 x2 x31 x32 x33 y1 y2 y3
+         s1_i1_tp2: ologit s1_i1_tp2 s4_i1_tp3 s4_i1_tp2 i.s1_i1_tp3 i.s1_i1_tp1 s4_i1_tp1 x11 x12
+                     x13 x2 x31 x32 x33 y1 y2 y3 , augment
+         s4_i1_tp2: regress s4_i1_tp2 s4_i1_tp3 i.s1_i1_tp2 i.s1_i1_tp3 i.s1_i1_tp1 s4_i1_tp1 x11
+                     x12 x13 x2 x31 x32 x33 y1 y2 y3
+         s1_i1_tp3: ologit s1_i1_tp3 s4_i1_tp3 i.s1_i1_tp2 s4_i1_tp2 i.s1_i1_tp1 s4_i1_tp1 x11 x12
+                     x13 x2 x31 x32 x33 y1 y2 y3 , augment
+         s1_i1_tp1: ologit s1_i1_tp1 s4_i1_tp3 i.s1_i1_tp2 s4_i1_tp2 i.s1_i1_tp3 s4_i1_tp1 x11 x12
+                     x13 x2 x31 x32 x33 y1 y2 y3 , augment
+         s4_i1_tp1: regress s4_i1_tp1 s4_i1_tp3 i.s1_i1_tp2 s4_i1_tp2 i.s1_i1_tp3 i.s1_i1_tp1 x11
+                     x12 x13 x2 x31 x32 x33 y1 y2 y3
+
+Performing chained iterations:
+  imputing m=1: burn-in 100 .........10.........20.........30.........40.........50.........60........
+> .70.........80.........90.........100 done
+  imputing m=2: burn-in 100 .........10.........20.........30.........40.........50.........60........
+> .70.........80.........90.........100 done
+  imputing m=3: burn-in 100 .........10.........20.........30.........40.........50.........60........
+> .70.........80.........90.........100 done
+  imputing m=4: burn-in 100 .........10.........20.........30.........40.........50.........60........
+> .70.........80.........90.........100 done
+  imputing m=5: burn-in 100 .........10.........20.........30.........40.........50.........60........
+> .70.........80.........90.........100 done
+
+Multivariate imputation                     Imputations =        5
+Chained equations                                 added =        5
+Imputed: m=1 through m=5                        updated =        0
+
+Initialization: monotone                     Iterations =      500
+                                                burn-in =      100
+
+         s4_i1_tp1: linear regression
+         s4_i1_tp2: linear regression
+         s4_i1_tp3: linear regression
+         s1_i1_tp1: ordered logistic regression
+         s1_i1_tp2: ordered logistic regression
+         s1_i1_tp3: ordered logistic regression
+
+───────────────────┬──────────────────────────────────────────────
+                   │               Observations per m             
+                   ├───────────────────────────────────┬──────────
+          Variable │   Complete   Incomplete   Imputed │     Total
+───────────────────┼───────────────────────────────────┼──────────
+         s4_i1_tp1 │        185           15        15 │       200
+         s4_i1_tp2 │        190           10        10 │       200
+         s4_i1_tp3 │        193            7         7 │       200
+         s1_i1_tp1 │        188           12        12 │       200
+         s1_i1_tp2 │        192            8         8 │       200
+         s1_i1_tp3 │        190           10        10 │       200
+───────────────────┴───────────────────────────────────┴──────────
+(complete + incomplete = total; imputed is the minimum across m
+ of the number of filled-in observations.)
 </pre>
 <p>Diagnostics:</p>
 
 <p><img src="chained.png" /></p>
 <p>Autocorrelation plot for the first three chains:</p>
-
-<p><img src="cchained_age_ac.png" /></p>
-<h2 id="what-do-we-need-all-these-imputations-for">What do we need all these imputations for???</h2>
-<p>To produce estimates of quantities of interest. To do that, we use Stata’ command <code>mi estimate</code>.</p>
-<p>For instance, say we wanted to estimate the means of ka_ecdm03 across time. We would do:</p>
+<p><img src="cchained_s1_i1_tp1_ac.png" /></p>
+<h2 id="using-imputed-datasets-plus-some-additional-diagnostics">Using imputed datasets (plus some additional diagnostics)</h2>
+<p>We use the imputed datasets to produce estimates of quantities of interest. To do that, we use Stata’ command <code>mi estimate</code>.</p>
+<p>For instance, suppose we wanted to estimate the means of s1 across time. We would do:</p>
 <pre class='stata'>. qui {
 
-. qui mi estimate: mean ka_ecdm03_tp, over(time)
+. mi estimate: mean s1_i1, over(time)
+
+Multiple-imputation estimates     Imputations     =          5
+Mean estimation                   Number of obs   =        600
+                                  Average RVI     =     0.0117
+                                  Largest FMI     =     0.0153
+                                  Complete DF     =        599
+DF adjustment:   Small sample     DF:     min     =     568.93
+                                          avg     =     578.22
+Within VCE type:     Analytic             max     =     585.87
+
+            1: time = 1
+            2: time = 2
+            3: time = 3
+
+─────────────┬────────────────────────────────────────────────
+        Over │       Mean   Std. Err.     [95% Conf. Interval]
+─────────────┼────────────────────────────────────────────────
+           1 │       .838   .0676022      .7052197    .9707803
+           2 │       .858   .0681253      .7242004    .9917996
+           3 │       .784   .0678255      .6507864    .9172136
+─────────────┴────────────────────────────────────────────────
 </pre>
+<p>Or we can also run a regression:</p>
+<pre class='stata'>. mi estimate: mixed y s1_i1 x1 x2 x3 || id:
+
+Multiple-imputation estimates                   Imputations       =          5
+Mixed-effects ML regression                     Number of obs     =        600
+
+Group variable: id                              Number of groups  =        200
+                                                Obs per group:
+                                                              min =          3
+                                                              avg =        3.0
+                                                              max =          3
+                                                Average RVI       =     0.0038
+                                                Largest FMI       =     0.0089
+DF adjustment:   Large sample                   DF:     min       =  51,437.76
+                                                        avg       = 7211067.52
+                                                        max       =   2.90e+07
+Model F test:       Equal FMI                   F(   4,610224.4)  =    1905.13
+                                                Prob > F          =     0.0000
+
+─────────────┬────────────────────────────────────────────────────────────────
+           y │      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+─────────────┼────────────────────────────────────────────────────────────────
+    s1_i1_tp │   .3859707   .0625264     6.17   0.000     .2634183    .5085232
+          x1 │   1.440248   .0276643    52.06   0.000     1.386027    1.494469
+          x2 │  -.2534587   .0369531    -6.86   0.000    -.3258854   -.1810319
+          x3 │   1.744699   .0368421    47.36   0.000     1.672489    1.816908
+       _cons │  -.7931172   .2508366    -3.16   0.002    -1.284748   -.3014865
+─────────────┴────────────────────────────────────────────────────────────────
+
+─────────────────────────────┬────────────────────────────────────────────────
+  Random-effects Parameters  │   Estimate   Std. Err.     [95% Conf. Interval]
+─────────────────────────────┼────────────────────────────────────────────────
+id: Identity                 │
+                   sd(_cons) │   .3642743   .0782776      .2390632    .5550657
+─────────────────────────────┼────────────────────────────────────────────────
+                sd(Residual) │   1.026121   .0368901      .9563057    1.101032
+─────────────────────────────┴────────────────────────────────────────────────
+</pre>
+<p>Additional diagnostics can be called after <code>mi estimate</code>.</p>
+<pre class='stata'>. mi estimate, vartable dftable
+note: dftable or vartable imply estmetric
+
+Multiple-imputation estimates                   Imputations       =          5
+Mixed-effects ML regression
+
+Variance information
+─────────────┬────────────────────────────────────────────────────────────────
+             │        Imputation variance                             Relative
+             │    Within   Between     Total       RVI       FMI    efficiency
+─────────────┼────────────────────────────────────────────────────────────────
+y            │
+    s1_i1_tp │   .003875   .000029    .00391   .008897   .008857       .998232
+          x1 │   .000764   1.3e-06   .000765   .001999   .001997       .999601
+          x2 │   .001365   5.1e-07   .001366   .000448   .000448        .99991
+          x3 │    .00135   5.7e-06   .001357     .0051   .005087       .998984
+       _cons │   .062896   .000019   .062919   .000372   .000372       .999926
+─────────────┼────────────────────────────────────────────────────────────────
+lns1_1_1     │
+       _cons │   .045773   .000336   .046176   .008802   .008763        .99825
+─────────────┼────────────────────────────────────────────────────────────────
+lnsig_e      │
+       _cons │   .001288   4.0e-06   .001292   .003732   .003725       .999256
+─────────────┴────────────────────────────────────────────────────────────────
+
+
+Multiple-imputation estimates                   Imputations       =          5
+Mixed-effects ML regression                     Number of obs     =        600
+
+Group variable: id                              Number of groups  =        200
+                                                Obs per group:
+                                                              min =          3
+                                                              avg =        3.0
+                                                              max =          3
+                                                Average RVI       =     0.0038
+                                                Largest FMI       =     0.0089
+DF adjustment:   Large sample                   DF:     min       =  51,437.76
+                                                        avg       = 7211067.52
+                                                        max       =   2.90e+07
+Model F test:       Equal FMI                   F(   4,610224.4)  =    1905.13
+                                                Prob > F          =     0.0000
+
+─────────────┬────────────────────────────────────────────────────────────────
+             │                                                      % Increase
+           y │      Coef.   Std. Err.      t    P>|t|           DF   Std. Err.
+─────────────┼────────────────────────────────────────────────────────────────
+y            │
+    s1_i1_tp │   .3859707   .0625264     6.17   0.000      51437.8        0.44
+          x1 │   1.440248   .0276643    52.06   0.000    1004709.8        0.10
+          x2 │  -.2534587   .0369531    -6.86   0.000      2.0e+07        0.02
+          x3 │   1.744699   .0368421    47.36   0.000     155375.4        0.25
+       _cons │  -.7931172   .2508366    -3.16   0.002      2.9e+07        0.02
+─────────────┼────────────────────────────────────────────────────────────────
+lns1_1_1     │
+       _cons │  -1.009848   .2148864                       52543.3        0.44
+─────────────┼────────────────────────────────────────────────────────────────
+lnsig_e      │
+       _cons │   .0257853    .035951                      289404.4        0.19
+─────────────┴────────────────────────────────────────────────────────────────
+</pre>
+<p>Within, between and total variance show the magnitude of the respective quantities in the Rubin’s rules.</p>
+<p>Relative Variance Increase (RVI) shows the proportional increase in variance of an estimate due to the missingness in the data (compared to data without missigness).</p>
+<p>Fraction of Missing Information (FMI) shows the propotion of total variance that is due to missingness.</p>
+<p>Relative Efficiency (RE) shows how well the true parameters are estimated compared to the estimates obtained from an infinite number of imputations.</p>
 <hr />
 <p><em>Some ‘ground rules’ of imputation</em></p>
 <p>Multiple imputation is an extremely useful technique that can help us tackle missing data problems in a principled and statistically sound manner. However, practitioners should remain vigilent and not fall into some common pitfalls associated with the procedure.</p>
@@ -293,5 +636,6 @@ X_{3} \leftarrow \boldsymbol{X_{-3}}, Z
 <p>Lumley, T., 2010, Complex Surveys. A guide to analysis in R.</p>
 <p>van Buuren, S., Groothuis-Oudshoorn, K., 2011, mice: Multivariate Imputation by Chained Equations in R, Journal of Statistical Software</p>
 <p>Stata, 2017, Stata Multiple-Imputation Reference Manual, Stata Crop LLC, College Station, Texas</p>
+<p>UCLA IDRE, Multiple Imputation in Stata, https://stats.idre.ucla.edu/stata/seminars/mi_in_stata_pt1_new/</p>
 </body>
 </html>

@@ -4,15 +4,12 @@
 
 
 ```s/
-if c(username) == "goshev" {
-	local data_dir "C:/Users/goshev/Desktop/imputations/data/"
-}
+qui do https://raw.githubusercontent.com/goshevs/pchained-github/master/simdata.ado
+set seed 1234567
 ```
 
 
-
-
-*The following is heavily borrowed from Simo's tutorial on missing data*
+*The following borrows heavily from Simo's tutorial on missing data*
  
 ## Missing data
 
@@ -42,35 +39,33 @@ or more subjects for one or more variables.
 
 We have collected data for a sample of individuals that include person, time and 
 treatment identifiers as well as demographic variables and responses to four 
-psycho-social scales: `dmn`, `hsclg`, `ka_ecdm` and `kzf`.
+psycho-social scales: `s1`, `s2`, `s3` and `s4`.
 
 We know that there is some missingness in our data but before we proceed with 
-analyzing the data, we want to know more how serious missigness is and whether
+analyzing the data, we want to know more about how serious missigness is and whether
 the amount of missingness may create problems for our analysis.
 
 We read the data in look at the first 12 responses (4 subjects observed 3 times)
-for `dmn`.
+for `s1`.
 
 ```s
-use "`data_dir'/missingDataTutorial", clear
-qui list id time ka_ecdm03 ka_ecdm04 ka_ecdm05 ///
-                    hsclg01 hsclg02 hsclg03 in 1/12
+simdata 200 3
+list id time s1_i* s2_i* in 1/30
 ```
 
-The number of missing observations in `dmn` is fairly large. Are the rest of the 
-scales having similar missing data issues? Let's use command `misstable` to explore
+Are the rest of the scales look similar? Let's use command `misstable` to explore
 the missingness further.
 
 We first look at a summary table of the missingness
 
 ```s
-qui misstable summarize, gen(fl)
+misstable summarize, gen(fl)
 ```
 
 Next, we explore the pattern of missingness
 
 ```s
-qui misstable pattern 
+misstable pattern, bypat
 ```
 ```s/
 qui {
@@ -84,7 +79,7 @@ qui {
 }
 ```
 It appears that some scales have more missingness than others. The proportion of 
-complete responses is 44%. The proportion of subject who responded to all 
+complete responses is 49%. The proportion of subject who responded to all 
 questions in all waves is `s sprop`%.
 
 
@@ -441,28 +436,54 @@ imputing continuous variables (that need to follow a normal
 distribution). This is a pretty significant limitation considering the
 variety of variable types that are present in social science data.
 
-Let us apply this method to three of the items of scale `hsclg`.
+Let us apply this method to three of the items of scale `s1`. First, we reshape
+the dataset to wide form.
 
 ```s/
 qui {
 	*** Reshape the dataset
-	foreach var of varlist ka_ecdm* dmn* kzf* hsclg* {
+	foreach var of varlist s1_i* s2_i* s3_i* s4_i* {
 		ren `var' `var'_tp
 	}
-	reshape wide ka_ecdm* dmn* kzf* hsclg*, i(id) j(time)
+	reshape wide s1_i* s2_i* s3_i* s4_i* x1 x3 x4 y, i(id) j(time)
+
+	*** collect all items of a scale
+	forval i = 1/4 {
+		local s`i' ""
+	}
+	foreach var of varlist _all {
+		if regexm("`var'", "^s1_i1.+") {
+			local s1 "`s1' `var'"
+		}
+		else if regexm("`var'", "^s2_i1.+") {
+			local s2 "`s2' `var'"		
+		}
+		else if regexm("`var'", "^s3_i1.+") {
+			local s3 "`s3' `var'"		
+		}
+		else if regexm("`var'", "^s4_i1.+") {
+			local s4 "`s4' `var'"			
+		}
+	}
 }
 ```
+
+Then we declare imputed variables and collect all items of a scale in a respective
+list.
+
 ```s
 mi set flong
-mi register imputed ka_ecdm03_tp0 ka_ecdm04_tp0 ka_ecdm05_tp0 ///
-                    hsclg01_tp1 hsclg02_tp1 hsclg03_tp1 ///
-					hsclg01_tp0 hsclg02_tp0 hsclg03_tp0
+mi register imputed s1_i* s2_i* s3_i* s4_i*
+```
 
-snapshot save, label("original-data")
+```s/
+qui snapshot save, label("original-data")
+```
 
-qui mi impute mvn ka_ecdm03_tp0 ka_ecdm04_tp0 ka_ecdm05_tp0 ///
-			  hsclg01_tp1 hsclg02_tp1 hsclg03_tp1 = base_cg_age i.base_cg_educat ///	
-			  i.family_structure i.rct_arm, add(5)  saveptrace(mytrace, replace)
+Finally, we impute the missing values of item 1 in scale 1.
+
+```s
+mi impute mvn `s1' = x1* i.x2* x3* y*, add(5)  saveptrace(mytrace, replace)
 ```
 
 The next step is to check convergence. We use command `mi ptrace` to retrieve 
@@ -470,38 +491,40 @@ the iteration logs and plot the coefficient estimates of age for each of the
 three imputed variables.
 
 ```s/
-preserve
+
 qui {
+	preserve
+	
 	mi ptrace use mytrace, clear
 	tsset iter
-	tsline b_y1x1, ytitle("ka_ecdm03_tp0") name(g1, replace) nodraw
-	tsline b_y2x1, ytitle("ka_ecdm04_tp0") name(g2, replace) nodraw
-	tsline b_y3x1, ytitle("ka_ecdm05_tp0") name(g3, replace) nodraw
-	graph combine g1 g2 g3, xcommon cols(1) title("Coefficient estimate on age") saving(mvn_age, replace) nodraw
-	graph use mvn_age
-	graph export "mvn_age.png", width(525) replace
-	graph close mvn_age
+	tsline b_y1x1, ytitle("s1_i1_tp1") name(g1, replace) nodraw 
+	tsline b_y2x1, ytitle("s1_i1_tp2") name(g2, replace) nodraw
+	tsline b_y3x1, ytitle("s1_i1_tp3") name(g3, replace) nodraw
+	graph combine g1 g2 g3, xcommon cols(1) title("Coefficient estimate on s1_i1") saving(mvn_s1_i1, replace) nodraw
+	graph use mvn_s1_i1
+	graph export "mvn_s1_i1.png", width(525) replace
+	graph close mvn_s1_i1
 }
 ```
-![](mvn_age.png)
+![](mvn_s1_i1.png)
 
 
 Autocorrelation plot of the same thing:
 
 ```s/
 qui {
-	ac b_y1x1, ytitle("ka_ecdm03_tp0") name(ac1, replace) nodraw
-	ac b_y2x1, ytitle("ka_ecdm04_tp0") name(ac2, replace) nodraw
-	ac b_y3x1, ytitle("ka_ecdm05_tp0") name(ac3, replace) nodraw
-	graph combine ac1 ac2 ac3, xcommon cols(1) title("Coefficient estimate on age") saving(mvn_age_ac, replace) nodraw
-	graph use mvn_age_ac
-	graph export "mvn_age_ac.png", width(525) replace
-	graph close mvn_age_ac
-}
+	ac b_y1x1, ytitle("s1_i1_tp1") name(ac1, replace) nodraw ylab(-.25 0 .25)
+	ac b_y2x1, ytitle("s1_i1_tp2") name(ac2, replace) nodraw ylab(-.25 0 .25)
+	ac b_y3x1, ytitle("s1_i1_tp3") name(ac3, replace) nodraw ylab(-.25 0 .25)
+	graph combine ac1 ac2 ac3, xcommon cols(1) title("Autocorrelation plot of coef estimate on s1_i1") saving(mvn_s1_i1_ac, replace) nodraw
+	graph use mvn_s1_i1_ac
+	graph export "mvn_s1_i1_ac.png", width(525) replace
+	graph close mvn_s1_i1_ac
 
-restore
+	restore
+}
 ```
-![](mvn_age_ac.png)
+![](mvn_s1_i1_ac.png)
 
 As we can see, there is some correlation between iterations in the simulated 
 values of the parameters on age. 
@@ -541,17 +564,6 @@ missing pattern.
 
 Stata's command is `mi impute monotone`.
 
-```s
-snapshot restore 1
-qui misstable pattern  hsclg01_tp0 hsclg02_tp0 hsclg03_tp0
-qui mi impute monotone (ologit) hsclg01_tp0 hsclg02_tp0 hsclg03_tp0 = base_cg_age i.base_cg_educat ///	
-			  i.family_structure i.rct_arm, add(5) augment
-```
-
-
-
-
-
 
 ### Multiple imputation using chained equations
 
@@ -581,59 +593,59 @@ other equations. MICE is similar in logic to MCMC in that it builds a chain,
 iterates until the chain attains its stationary distribution and samples from 
 it to replace the missing observations.
 
-Let's apply this method to the same items we used before:
+Let's apply this method to items 1 of scales 1 and 4:
 
-```s
+```s/
 snapshot restore 1
-qui mi impute chained (regress) ka_ecdm03_tp0 ka_ecdm04_tp0 ka_ecdm05_tp0 ///
-			      (ologit, augment) hsclg01_tp1 hsclg02_tp1 hsclg03_tp1 = base_cg_age i.base_cg_educat ///	
-				   i.family_structure i.rct_arm, add(5) burnin(10) chaindots savetrace(mytrace, replace)
+```
+```s
+mi impute chained (regress) `s4' (ologit, augment) `s1' = x1* x2* x3* y*, ///
+			add(5) burnin(100) chaindots savetrace(mytrace, replace)
 ```
 
 Diagnostics:
 
 ```s/
-preserve
 qui {
+	preserve
+	
 	use mytrace, clear
-    reshape wide *mean *sd, i(iter) j(m)
+	reshape wide *mean *sd, i(iter) j(m)
 	tsset iter
-    tsline ka_ecdm03_tp0_mean*, name(chained1,replace) legend(off) ytitle("Mean of ka_ecdm03_tp0_mean*") nodraw
-    tsline ka_ecdm03_tp0_sd*, name(chained2, replace) legend(off) ytitle("Standard Deviation of ka_ecdm03_tp0_mean*") nodraw
-    graph combine chained1 chained2, xcommon cols(1) title(Chain plots of values of hsclg01_tp0_mean) ///
-	              saving(chained, replace) nodraw
+	tsline s1_i1_tp1_mean*, name(chained1, replace) legend(off) ytitle("Mean of s1_i1_tp1*") nodraw
+	tsline s1_i1_tp1_sd*, name(chained2, replace) legend(off) ytitle("Standard Deviation of s1_i1_tp1*") nodraw
+	graph combine chained1 chained2, xcommon cols(1) title("Chain plots of values of s1_i1_tp1*") ///
+				  saving(chained, replace) nodraw
 	graph use chained
 	graph export "chained.png", width(525) replace
 	graph close chained
-	}
+	
+	ac s1_i1_tp1_mean1, ytitle("s1_i1_tp1_mean1") name(cac1, replace) nodraw ylab(-0.25 0 0.25)
+	ac s1_i1_tp1_mean2, ytitle("s1_i1_tp1_mean2") name(cac2, replace) nodraw ylab(-0.25 0 0.25)
+	ac s1_i1_tp1_mean3, ytitle("s1_i1_tp1_mean3") name(cac3, replace) nodraw ylab(-0.25 0 0.25)
+	graph combine cac1 cac2 cac3, xcommon cols(1) title("") saving(cchained_s1_i1_tp1_ac, replace) nodraw
+	graph use cchained_s1_i1_tp1_ac
+	graph export "cchained_s1_i1_tp1_ac.png", width(525) replace
+	graph close cchained_s1_i1_tp1_ac
+	
+	restore
+}
 ```
 ![](chained.png)
 
 
 Autocorrelation plot for the first three chains:
 
-```s/
-qui {
-	ac ka_ecdm03_tp0_mean1, ytitle("ka_ecdm03_tp0_mean1") name(cac1, replace) nodraw
-	ac ka_ecdm03_tp0_mean2, ytitle("ka_ecdm03_tp0_mean2") name(cac2, replace) nodraw
-	ac ka_ecdm03_tp0_mean3, ytitle("ka_ecdm03_tp0_mean3") name(cac3, replace) nodraw
-	graph combine cac1 cac2 cac3, xcommon cols(1) title("") saving(cchained_age_ac, replace) nodraw
-	graph use cchained_age_ac
-	graph export "cchained_age_ac.png", width(525) replace
-	graph close cchained_age_ac
-}
-restore
-```
-
-![](cchained_age_ac.png)
+![](cchained_s1_i1_tp1_ac.png)
 
 
-## What do we need all these imputations for???
 
-To produce estimates of quantities of interest. To do that, we use Stata' command 
-`mi estimate`.
+## Using imputed datasets (plus some additional diagnostics)
 
-For instance, say we wanted to estimate the means of ka_ecdm03 across time. We
+We use the imputed datasets to produce estimates of quantities of interest. To 
+do that, we use Stata' command `mi estimate`.
+
+For instance, suppose we wanted to estimate the means of s1 across time. We
 would do:
 
 ```s
@@ -648,10 +660,37 @@ qui {
 	}
 	local mystubs: list uniq mystubs
 
-	mi reshape long `mystubs', i(id) j(time)
+	mi reshape long `mystubs' x1 x3 x4 y, i(id) j(time)
 }
-qui mi estimate: mean ka_ecdm03_tp, over(time)
+mi estimate: mean s1_i1, over(time)
 ```
+
+Or we can also run a regression:
+```s
+mi estimate: mixed y s1_i1 x1 x2 x3 || id:
+```
+
+Additional diagnostics can be called after `mi estimate`. 
+
+```s
+mi estimate, vartable dftable
+```
+
+Within, between and total variance show the magnitude of the respective quantities
+in the Rubin's rules. 
+
+Relative Variance Increase (RVI) shows the proportional increase in variance 
+of an estimate due to the missingness in the data (compared to data without missigness).
+
+Fraction of Missing Information (FMI) shows the propotion of total variance that is due to 
+missingness.
+
+Relative Efficiency (RE) shows how well the true parameters are estimated compared 
+to the estimates obtained from an infinite number of imputations.
+
+
+
+
 
 
 *********
@@ -709,3 +748,5 @@ Chained Equations in R, Journal of Statistical Software
 
 Stata, 2017, Stata Multiple-Imputation Reference Manual, Stata Crop LLC, 
 College Station, Texas
+
+UCLA IDRE, Multiple Imputation in Stata, https://stats.idre.ucla.edu/stata/seminars/mi_in_stata_pt1_new/
