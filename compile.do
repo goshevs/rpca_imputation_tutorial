@@ -84,7 +84,7 @@ end
 cd "`base_dir'"
 
 *** compile the document as html
-* markstat using "rpca-imputation-tutorial.stmd", mathjax
+markstat using "rpca-imputation-tutorial.stmd", mathjax
 
 *** compile the document as pdf
 markstat using "rpca-imputation-tutorial.stmd", pdf

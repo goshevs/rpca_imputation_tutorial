@@ -67,7 +67,7 @@ table tbody:last-child tr:last-child td {border-bottom:1px solid black;}
 <header id="title-block-header">
 <h1 class="title">Introduction to Missing Data and Imputation (Session 1)</h1>
 <p class="author">Dale Barnhart, Robert Brennan, Simo Goshev</p>
-<p class="date">9 Oct 2018 , v0.01</p>
+<p class="date">15 Feb 2019 , v0.01</p>
 </header>
 
 <p><em>The following borrows heavily from Simo’s tutorial on missing data</em></p>
@@ -83,46 +83,48 @@ table tbody:last-child tr:last-child td {border-bottom:1px solid black;}
 <p>We read the data in look at the first 12 responses (4 subjects observed 3 times) for <code>s1</code>.</p>
 <pre class='stata'>. simdata 200 3
 
+. keep id time s1_i* s2_i* s3_i* s4_i* x1 x2 x3 x4 y1
+
 . list id time s1_i* s2_i* in 1/30
 
      ┌───────────────────────────────────────────────────┐
      │ id   time   s1_i1   s1_i2   s1_i3   s2_i1   s2_i2 │
      ├───────────────────────────────────────────────────┤
-  1. │  1      1       1       1       0       2       2 │
-  2. │  1      2       1       0       0       3       1 │
-  3. │  1      3       1       0       1       3       2 │
-  4. │  2      1       1       2       1       5       . │
-  5. │  2      2       2       2       1       2       2 │
+  1. │  1      1       1       0       2       2       2 │
+  2. │  1      2       1       2       1       4       0 │
+  3. │  1      3       1       1       0       3       2 │
+  4. │  2      1       2       3       3       2       2 │
+  5. │  2      2       3       3       1       4       3 │
      ├───────────────────────────────────────────────────┤
-  6. │  2      3       2       1       2       2       5 │
-  7. │  3      1       0       0       0       .       1 │
-  8. │  3      2       0       0       0       0       0 │
-  9. │  3      3       0       0       0       0       3 │
- 10. │  4      1       0       0       0       0       0 │
+  6. │  2      3       2       1       3       2       5 │
+  7. │  3      1       0       0       0       2       2 │
+  8. │  3      2       1       0       0       2       1 │
+  9. │  3      3       0       0       .       2       4 │
+ 10. │  4      1       0       1       0       4       0 │
      ├───────────────────────────────────────────────────┤
- 11. │  4      2       0       0       0       2       2 │
- 12. │  4      3       0       0       0       3       0 │
- 13. │  5      1       0       1       1       3       2 │
- 14. │  5      2       0       0       0       4       2 │
- 15. │  5      3       0       1       1       2       4 │
+ 11. │  4      2       1       1       .       3       1 │
+ 12. │  4      3       1       0       0       0       4 │
+ 13. │  5      1       0       1       0       2       4 │
+ 14. │  5      2       1       0       1       4       3 │
+ 15. │  5      3       2       0       2       1       1 │
      ├───────────────────────────────────────────────────┤
- 16. │  6      1       0       0       0       1       0 │
- 17. │  6      2       0       0       0       2       0 │
- 18. │  6      3       .       0       1       2       0 │
- 19. │  7      1       2       1       2       4       5 │
- 20. │  7      2       1       1       2       1       1 │
+ 16. │  6      1       1       3       1       2       2 │
+ 17. │  6      2       2       2       1       3       3 │
+ 18. │  6      3       1       2       1       5       5 │
+ 19. │  7      1       0       0       .       4       0 │
+ 20. │  7      2       1       0       0       0       2 │
      ├───────────────────────────────────────────────────┤
- 21. │  7      3       1       1       .       4       2 │
- 22. │  8      1       0       0       0       0       0 │
- 23. │  8      2       0       1       0       1       1 │
- 24. │  8      3       0       0       0       2       0 │
- 25. │  9      1       1       1       2       0       3 │
+ 21. │  7      3       0       0       0       3       1 │
+ 22. │  8      1       1       1       0       3       0 │
+ 23. │  8      2       0       1       1       0       4 │
+ 24. │  8      3       0       0       0       4       1 │
+ 25. │  9      1       0       0       0       3       0 │
      ├───────────────────────────────────────────────────┤
- 26. │  9      2       1       2       1       4       3 │
- 27. │  9      3       1       2       1       1       4 │
- 28. │ 10      1       0       1       1       4       1 │
- 29. │ 10      2       1       0       1       4       2 │
- 30. │ 10      3       0       1       0       1       4 │
+ 26. │  9      2       0       0       0       2       3 │
+ 27. │  9      3       0       0       0       2       0 │
+ 28. │ 10      1       0       1       .       .       0 │
+ 29. │ 10      2       0       1       0       1       2 │
+ 30. │ 10      3       1       1       .       2       4 │
      └───────────────────────────────────────────────────┘
 </pre>
 <p>Are the rest of the scales look similar? Let’s use command <code>misstable</code> to explore the missingness further.</p>
@@ -133,19 +135,19 @@ table tbody:last-child tr:last-child td {border-bottom:1px solid black;}
                │                                │ Unique
       Variable │     Obs=.     Obs>.     Obs&lt;.  │ values        Min         Max
   ─────────────┼────────────────────────────────┼──────────────────────────────
-         s1_i1 │        30                 570  │      5          0           4
-         s1_i2 │        29                 571  │      5          0           4
-         s1_i3 │        35                 565  │      5          0           4
-         s2_i1 │        41                 559  │      8          0           7
-         s2_i2 │        34                 566  │      7          0           6
-         s3_i1 │        27                 573  │      2          0           1
-         s3_i2 │        26                 574  │      2          0           1
-         s3_i3 │        28                 572  │      2          0           1
-         s3_i4 │        36                 564  │      2          0           1
-         s4_i1 │        32                 568  │   >500          0    51.90791
-         s4_i2 │        34                 566  │   >500          0    52.10009
-         s4_i3 │        23                 577  │   >500          0     52.0597
-         s4_i4 │        35                 565  │   >500          0    51.07303
+         s1_i1 │        31                 569  │      5          0           4
+         s1_i2 │        36                 564  │      5          0           4
+         s1_i3 │        26                 574  │      5          0           4
+         s2_i1 │        34                 566  │      8          0           7
+         s2_i2 │        32                 568  │      8          0           7
+         s3_i1 │        31                 569  │      2          0           1
+         s3_i2 │        30                 570  │      2          0           1
+         s3_i3 │        36                 564  │      2          0           1
+         s3_i4 │        17                 583  │      2          0           1
+         s4_i1 │        31                 569  │   >500          0    51.81427
+         s4_i2 │        34                 566  │   >500          0    50.88475
+         s4_i3 │        28                 572  │   >500          0    50.81306
+         s4_i4 │        31                 569  │   >500          0    52.23317
   ─────────────┴────────────────────────────────┴──────────────────────────────
 </pre>
 <p>Next, we explore the pattern of missingness</p>
@@ -157,13 +159,13 @@ table tbody:last-child tr:last-child td {border-bottom:1px solid black;}
               │   Pattern
     Percent   │  1  2  3  4    5  6  7  8    9 10 11 12   13
   ────────────┼──────────────────────────────────────────────
-       49%    │  1  1  1  1    1  1  1  1    1  1  1  1    1
+       51%    │  1  1  1  1    1  1  1  1    1  1  1  1    1
               │
   1:          │
         4     │  1  1  1  1    1  1  1  1    1  1  1  1    0
-        4     │  1  1  1  1    1  1  1  1    1  1  1  0    1
+        3     │  1  1  1  1    1  1  1  1    1  1  1  0    1
         3     │  1  1  1  1    1  1  1  1    1  1  0  1    1
-        3     │  1  1  1  1    1  1  1  1    1  0  1  1    1
+        4     │  1  1  1  1    1  1  1  1    1  0  1  1    1
         3     │  1  1  1  1    1  1  1  1    0  1  1  1    1
         3     │  1  1  1  1    1  1  1  0    1  1  1  1    1
         2     │  1  1  1  1    1  1  0  1    1  1  1  1    1
@@ -174,75 +176,79 @@ table tbody:last-child tr:last-child td {border-bottom:1px solid black;}
         3     │  1  0  1  1    1  1  1  1    1  1  1  1    1
         2     │  0  1  1  1    1  1  1  1    1  1  1  1    1
   2:          │
+       &lt;1     │  1  1  1  1    1  1  1  1    1  1  1  0    0
        &lt;1     │  1  1  1  1    1  1  1  1    1  1  0  1    0
+       &lt;1     │  1  1  1  1    1  1  1  1    1  1  0  0    1
        &lt;1     │  1  1  1  1    1  1  1  1    1  0  1  1    0
-       &lt;1     │  1  1  1  1    1  1  1  1    1  0  1  0    1
-       &lt;1     │  1  1  1  1    1  1  1  1    1  0  0  1    1
        &lt;1     │  1  1  1  1    1  1  1  1    0  1  1  1    0
-       &lt;1     │  1  1  1  1    1  1  1  1    0  1  1  0    1
+       &lt;1     │  1  1  1  1    1  1  1  1    0  1  0  1    1
        &lt;1     │  1  1  1  1    1  1  1  1    0  0  1  1    1
        &lt;1     │  1  1  1  1    1  1  1  0    1  1  1  1    0
        &lt;1     │  1  1  1  1    1  1  1  0    1  1  1  0    1
-       &lt;1     │  1  1  1  1    1  1  1  0    1  1  0  1    1
-       &lt;1     │  1  1  1  1    1  1  1  0    1  0  1  1    1
        &lt;1     │  1  1  1  1    1  1  1  0    0  1  1  1    1
        &lt;1     │  1  1  1  1    1  1  0  1    1  1  1  1    0
        &lt;1     │  1  1  1  1    1  1  0  1    1  1  1  0    1
        &lt;1     │  1  1  1  1    1  1  0  1    1  1  0  1    1
-       &lt;1     │  1  1  1  1    1  1  0  1    1  0  1  1    1
-       &lt;1     │  1  1  1  1    1  0  1  1    1  1  1  1    0
+       &lt;1     │  1  1  1  1    1  1  0  1    0  1  1  1    1
+       &lt;1     │  1  1  1  1    1  1  0  0    1  1  1  1    1
        &lt;1     │  1  1  1  1    1  0  1  1    1  1  1  0    1
        &lt;1     │  1  1  1  1    1  0  1  1    1  1  0  1    1
-       &lt;1     │  1  1  1  1    1  0  0  1    1  1  1  1    1
+       &lt;1     │  1  1  1  1    1  0  1  1    1  0  1  1    1
+       &lt;1     │  1  1  1  1    1  0  1  1    0  1  1  1    1
        &lt;1     │  1  1  1  1    0  1  1  1    1  1  1  1    0
        &lt;1     │  1  1  1  1    0  1  1  1    1  1  1  0    1
-       &lt;1     │  1  1  1  1    0  1  1  1    1  1  0  1    1
        &lt;1     │  1  1  1  1    0  1  1  1    0  1  1  1    1
+       &lt;1     │  1  1  1  1    0  1  1  0    1  1  1  1    1
        &lt;1     │  1  1  1  1    0  1  0  1    1  1  1  1    1
        &lt;1     │  1  1  1  1    0  0  1  1    1  1  1  1    1
-       &lt;1     │  1  1  1  0    1  1  1  1    1  1  1  1    0
        &lt;1     │  1  1  1  0    1  1  1  1    1  1  1  0    1
        &lt;1     │  1  1  1  0    1  1  1  1    1  1  0  1    1
-       &lt;1     │  1  1  1  0    1  1  1  1    0  1  1  1    1
+       &lt;1     │  1  1  1  0    1  1  1  1    1  0  1  1    1
        &lt;1     │  1  1  1  0    1  1  0  1    1  1  1  1    1
        &lt;1     │  1  1  1  0    1  0  1  1    1  1  1  1    1
+       &lt;1     │  1  1  1  0    0  1  1  1    1  1  1  1    1
        &lt;1     │  1  1  0  1    1  1  1  1    1  1  1  1    0
        &lt;1     │  1  1  0  1    1  1  1  1    1  1  1  0    1
-       &lt;1     │  1  1  0  1    1  1  1  1    0  1  1  1    1
-       &lt;1     │  1  1  0  1    1  1  1  0    1  1  1  1    1
+       &lt;1     │  1  1  0  1    1  1  1  1    1  1  0  1    1
+       &lt;1     │  1  1  0  1    1  1  1  1    1  0  1  1    1
        &lt;1     │  1  1  0  1    1  1  0  1    1  1  1  1    1
-       &lt;1     │  1  1  0  1    1  0  1  1    1  1  1  1    1
+       &lt;1     │  1  1  0  1    0  1  1  1    1  1  1  1    1
        &lt;1     │  1  0  1  1    1  1  1  1    1  1  1  1    0
-       &lt;1     │  1  0  1  1    1  1  1  1    1  0  1  1    1
-       &lt;1     │  1  0  1  1    1  1  0  1    1  1  1  1    1
+       &lt;1     │  1  0  1  1    1  1  1  1    1  1  1  0    1
+       &lt;1     │  1  0  1  1    1  1  1  1    1  1  0  1    1
+       &lt;1     │  1  0  1  1    1  1  1  0    1  1  1  1    1
+       &lt;1     │  1  0  1  1    0  1  1  1    1  1  1  1    1
        &lt;1     │  1  0  1  0    1  1  1  1    1  1  1  1    1
-       &lt;1     │  1  0  0  1    1  1  1  1    1  1  1  1    1
-       &lt;1     │  0  1  1  1    1  1  1  1    1  1  1  1    0
        &lt;1     │  0  1  1  1    1  1  1  1    1  0  1  1    1
-       &lt;1     │  0  1  1  1    1  1  1  1    0  1  1  1    1
-       &lt;1     │  0  1  1  1    1  1  1  0    1  1  1  1    1
-       &lt;1     │  0  1  1  1    1  1  0  1    1  1  1  1    1
+       &lt;1     │  0  1  1  1    1  0  1  1    1  1  1  1    1
        &lt;1     │  0  1  1  1    0  1  1  1    1  1  1  1    1
+       &lt;1     │  0  1  0  1    1  1  1  1    1  1  1  1    1
   3:          │
-       &lt;1     │  1  1  1  1    1  1  0  0    1  1  1  0    1
-       &lt;1     │  1  1  1  1    1  0  1  1    1  1  0  1    0
-       &lt;1     │  1  1  1  1    1  0  0  1    1  1  0  1    1
-       &lt;1     │  1  1  1  0    1  1  1  0    1  0  1  1    1
-       &lt;1     │  1  1  0  1    0  1  1  0    1  1  1  1    1
-       &lt;1     │  1  0  1  1    1  1  1  1    1  1  0  1    0
-       &lt;1     │  1  0  1  0    1  1  1  0    1  1  1  1    1
+       &lt;1     │  1  1  1  1    1  1  1  1    0  0  0  1    1
+       &lt;1     │  1  1  1  1    1  0  1  1    1  1  0  0    1
+       &lt;1     │  1  1  1  1    0  1  1  1    0  1  1  1    0
+       &lt;1     │  1  1  1  1    0  0  1  1    1  0  1  1    1
+       &lt;1     │  1  1  1  0    1  1  0  1    0  1  1  1    1
+       &lt;1     │  1  1  1  0    0  1  0  1    1  1  1  1    1
+       &lt;1     │  1  1  0  1    1  1  1  1    1  1  1  0    0
+       &lt;1     │  1  1  0  1    1  1  1  1    1  1  0  0    1
+       &lt;1     │  1  1  0  1    0  1  1  1    1  1  1  0    1
+       &lt;1     │  1  0  1  1    1  1  1  0    1  1  0  1    1
+       &lt;1     │  1  0  1  1    1  0  1  1    1  1  1  0    1
+       &lt;1     │  1  0  1  1    0  1  0  1    1  1  1  1    1
+       &lt;1     │  1  0  1  0    1  0  1  1    1  1  1  1    1
+       &lt;1     │  1  0  0  1    1  1  1  1    1  0  1  1    1
+       &lt;1     │  0  1  0  1    1  1  0  1    1  1  1  1    1
   4:          │
-       &lt;1     │  1  1  1  1    1  0  0  0    1  0  1  1    1
-       &lt;1     │  0  1  1  1    1  1  0  1    1  1  0  0    1
-       &lt;1     │  0  0  1  0    1  1  0  1    1  1  1  1    1
+       &lt;1     │  1  1  1  0    0  1  1  1    1  0  1  1    0
   ────────────┼──────────────────────────────────────────────
       100%    │
 
-  Variables are  (1) s4_i3  (2) s3_i2  (3) s3_i1  (4) s3_i3  (5) s1_i2  (6) s1_i1  (7) s4_i1
-                 (8) s4_i2  (9) s2_i2  (10) s4_i4  (11) s1_i3  (12) s3_i4  (13) s2_i1
+  Variables are  (1) s3_i4  (2) s1_i3  (3) s4_i3  (4) s3_i2  (5) s4_i4  (6) s1_i1  (7) s3_i1
+                 (8) s4_i1  (9) s2_i2  (10) s4_i2  (11) s2_i1  (12) s1_i2  (13) s3_i3
 </pre>
 
-<p>It appears that some scales have more missingness than others. The proportion of complete responses is 49%. The proportion of subject who responded to all questions in all waves is 119%.</p>
+<p>It appears that some scales have more missingness than others. The proportion of complete responses is 49%. The proportion of subject who responded to all questions in all waves is 15%.</p>
 <h2 id="missing-data-mechanisms">Missing data mechanisms</h2>
 <p>As we will see shortly, there are three distinct missing-data mechanisms defined in the literature. To understand better these mechanisms and how they defer from each other, we first need to define two terms: <em>observed</em> and <em>unobserved</em> data.</p>
 <p><strong>Observed data</strong> are the values or measurements that a researcher collects. In our dataset, these would be the recorded values (except for the missing values) for all variables and items.</p>
@@ -350,18 +356,18 @@ Phase 2: A subset of respondents is selected and the remaining variable are obse
 <pre class='stata'>. mi set flong
 
 . mi register imputed s1_i* s2_i* s3_i* s4_i*
-(181 m=0 obs. now marked as incomplete)
+(170 m=0 obs. now marked as incomplete)
 </pre>
 
 <p>Finally, we impute the missing values of item 1 in scale 1.</p>
-<pre class='stata'>. mi impute mvn `s1' = x1* i.x2* x3* y*, add(5)  saveptrace(mytrace, replace)
+<pre class='stata'>. mi impute mvn `s1' = x1* i.x2* x3* y1*, add(5)  saveptrace(mytrace, replace)
 note: x12 omitted because of collinearity
 note: x13 omitted because of collinearity
 
 Performing EM optimization:
 note: x12 omitted because of collinearity
 note: x13 omitted because of collinearity
-  observed log likelihood =  15.724247 at iteration 9
+  observed log likelihood =  9.7821841 at iteration 12
 
 Performing MCMC data augmentation ... 
 
@@ -378,9 +384,9 @@ Prior: uniform                               Iterations =      500
                    ├───────────────────────────────────┬──────────
           Variable │   Complete   Incomplete   Imputed │     Total
 ───────────────────┼───────────────────────────────────┼──────────
-         s1_i1_tp1 │        188           12        12 │       200
-         s1_i1_tp2 │        192            8         8 │       200
-         s1_i1_tp3 │        190           10        10 │       200
+         s1_i1_tp1 │        185           15        15 │       200
+         s1_i1_tp2 │        195            5         5 │       200
+         s1_i1_tp3 │        189           11        11 │       200
 ───────────────────┴───────────────────────────────────┴──────────
 (complete + incomplete = total; imputed is the minimum across m
  of the number of filled-in observations.)
@@ -423,22 +429,22 @@ X_{3} \leftarrow \boldsymbol{X_{-3}}, Z
 <p>In essence, MICE is based on a series of univariate imputation models, each of which is selected to correspond to the type of variable ( e.g. continuous, categorical, proportion, etc.) that is being imputed. It uses chained equations, meaning that an outcome in one imputation equation by default (and this can be customized) is a predictor in all other equations. MICE is similar in logic to MCMC in that it builds a chain, iterates until the chain attains its stationary distribution and samples from it to replace the missing observations.</p>
 <p>Let’s apply this method to items 1 of scales 1 and 4:</p>
 
-<pre class='stata'>. mi impute chained (regress) `s4' (ologit, augment) `s1' = x1* x2* x3* y*, ///
+<pre class='stata'>. mi impute chained (regress) `s4' (pmm, knn(3)) `s1' = x1* i.x2 x3* y1*, ///
 >         add(5) burnin(100) chaindots savetrace(mytrace, replace)
 
 Conditional models:
-         s4_i1_tp3: regress s4_i1_tp3 i.s1_i1_tp2 s4_i1_tp2 i.s1_i1_tp3 i.s1_i1_tp1 s4_i1_tp1 x11
-                     x12 x13 x2 x31 x32 x33 y1 y2 y3
-         s1_i1_tp2: ologit s1_i1_tp2 s4_i1_tp3 s4_i1_tp2 i.s1_i1_tp3 i.s1_i1_tp1 s4_i1_tp1 x11 x12
-                     x13 x2 x31 x32 x33 y1 y2 y3 , augment
-         s4_i1_tp2: regress s4_i1_tp2 s4_i1_tp3 i.s1_i1_tp2 i.s1_i1_tp3 i.s1_i1_tp1 s4_i1_tp1 x11
-                     x12 x13 x2 x31 x32 x33 y1 y2 y3
-         s1_i1_tp3: ologit s1_i1_tp3 s4_i1_tp3 i.s1_i1_tp2 s4_i1_tp2 i.s1_i1_tp1 s4_i1_tp1 x11 x12
-                     x13 x2 x31 x32 x33 y1 y2 y3 , augment
-         s1_i1_tp1: ologit s1_i1_tp1 s4_i1_tp3 i.s1_i1_tp2 s4_i1_tp2 i.s1_i1_tp3 s4_i1_tp1 x11 x12
-                     x13 x2 x31 x32 x33 y1 y2 y3 , augment
-         s4_i1_tp1: regress s4_i1_tp1 s4_i1_tp3 i.s1_i1_tp2 s4_i1_tp2 i.s1_i1_tp3 i.s1_i1_tp1 x11
-                     x12 x13 x2 x31 x32 x33 y1 y2 y3
+         s1_i1_tp2: pmm s1_i1_tp2 s4_i1_tp1 s4_i1_tp3 s4_i1_tp2 s1_i1_tp3 s1_i1_tp1 x11 x12 x13 i.x2
+                     x31 x32 x33 y11 y12 y13 , knn(3)
+         s4_i1_tp1: regress s4_i1_tp1 s1_i1_tp2 s4_i1_tp3 s4_i1_tp2 s1_i1_tp3 s1_i1_tp1 x11 x12 x13
+                     i.x2 x31 x32 x33 y11 y12 y13
+         s4_i1_tp3: regress s4_i1_tp3 s1_i1_tp2 s4_i1_tp1 s4_i1_tp2 s1_i1_tp3 s1_i1_tp1 x11 x12 x13
+                     i.x2 x31 x32 x33 y11 y12 y13
+         s4_i1_tp2: regress s4_i1_tp2 s1_i1_tp2 s4_i1_tp1 s4_i1_tp3 s1_i1_tp3 s1_i1_tp1 x11 x12 x13
+                     i.x2 x31 x32 x33 y11 y12 y13
+         s1_i1_tp3: pmm s1_i1_tp3 s1_i1_tp2 s4_i1_tp1 s4_i1_tp3 s4_i1_tp2 s1_i1_tp1 x11 x12 x13 i.x2
+                     x31 x32 x33 y11 y12 y13 , knn(3)
+         s1_i1_tp1: pmm s1_i1_tp1 s1_i1_tp2 s4_i1_tp1 s4_i1_tp3 s4_i1_tp2 s1_i1_tp3 x11 x12 x13 i.x2
+                     x31 x32 x33 y11 y12 y13 , knn(3)
 
 Performing chained iterations:
   imputing m=1: burn-in 100 .........10.........20.........30.........40.........50.........60........
@@ -462,21 +468,21 @@ Initialization: monotone                     Iterations =      500
          s4_i1_tp1: linear regression
          s4_i1_tp2: linear regression
          s4_i1_tp3: linear regression
-         s1_i1_tp1: ordered logistic regression
-         s1_i1_tp2: ordered logistic regression
-         s1_i1_tp3: ordered logistic regression
+         s1_i1_tp1: predictive mean matching
+         s1_i1_tp2: predictive mean matching
+         s1_i1_tp3: predictive mean matching
 
 ───────────────────┬──────────────────────────────────────────────
                    │               Observations per m             
                    ├───────────────────────────────────┬──────────
           Variable │   Complete   Incomplete   Imputed │     Total
 ───────────────────┼───────────────────────────────────┼──────────
-         s4_i1_tp1 │        185           15        15 │       200
-         s4_i1_tp2 │        190           10        10 │       200
-         s4_i1_tp3 │        193            7         7 │       200
-         s1_i1_tp1 │        188           12        12 │       200
-         s1_i1_tp2 │        192            8         8 │       200
-         s1_i1_tp3 │        190           10        10 │       200
+         s4_i1_tp1 │        190           10        10 │       200
+         s4_i1_tp2 │        189           11        11 │       200
+         s4_i1_tp3 │        190           10        10 │       200
+         s1_i1_tp1 │        185           15        15 │       200
+         s1_i1_tp2 │        195            5         5 │       200
+         s1_i1_tp3 │        189           11        11 │       200
 ───────────────────┴───────────────────────────────────┴──────────
 (complete + incomplete = total; imputed is the minimum across m
  of the number of filled-in observations.)
@@ -495,12 +501,12 @@ Initialization: monotone                     Iterations =      500
 
 Multiple-imputation estimates     Imputations     =          5
 Mean estimation                   Number of obs   =        600
-                                  Average RVI     =     0.0117
-                                  Largest FMI     =     0.0153
+                                  Average RVI     =     0.0504
+                                  Largest FMI     =     0.1042
                                   Complete DF     =        599
-DF adjustment:   Small sample     DF:     min     =     568.93
-                                          avg     =     578.22
-Within VCE type:     Analytic             max     =     585.87
+DF adjustment:   Small sample     DF:     min     =     230.77
+                                          avg     =     445.21
+Within VCE type:     Analytic             max     =     561.92
 
             1: time = 1
             2: time = 2
@@ -509,13 +515,13 @@ Within VCE type:     Analytic             max     =     585.87
 ─────────────┬────────────────────────────────────────────────
         Over │       Mean   Std. Err.     [95% Conf. Interval]
 ─────────────┼────────────────────────────────────────────────
-           1 │       .838   .0676022      .7052197    .9707803
-           2 │       .858   .0681253      .7242004    .9917996
-           3 │       .784   .0678255      .6507864    .9172136
+           1 │       .822   .0690323      .6859859    .9580141
+           2 │       .726    .061718      .6047738    .8472262
+           3 │       .786   .0700402      .6484171    .9235829
 ─────────────┴────────────────────────────────────────────────
 </pre>
 <p>Or we can also run a regression:</p>
-<pre class='stata'>. mi estimate: mixed y s1_i1 x1 x2 x3 || id:
+<pre class='stata'>. mi estimate: mixed y1 s1_i1 x1 x2 x3 || id:
 
 Multiple-imputation estimates                   Imputations       =          5
 Mixed-effects ML regression                     Number of obs     =        600
@@ -525,31 +531,31 @@ Group variable: id                              Number of groups  =        200
                                                               min =          3
                                                               avg =        3.0
                                                               max =          3
-                                                Average RVI       =     0.0038
-                                                Largest FMI       =     0.0089
-DF adjustment:   Large sample                   DF:     min       =  51,437.76
-                                                        avg       = 7211067.52
-                                                        max       =   2.90e+07
-Model F test:       Equal FMI                   F(   4,610224.4)  =    1905.13
+                                                Average RVI       =     0.0088
+                                                Largest FMI       =     0.0421
+DF adjustment:   Large sample                   DF:     min       =   2,346.06
+                                                        avg       = 470,525.83
+                                                        max       = 1160340.49
+Model F test:       Equal FMI                   F(   4,59453.1)   =    1649.80
                                                 Prob > F          =     0.0000
 
 ─────────────┬────────────────────────────────────────────────────────────────
-           y │      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+          y1 │      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
 ─────────────┼────────────────────────────────────────────────────────────────
-    s1_i1_tp │   .3859707   .0625264     6.17   0.000     .2634183    .5085232
-          x1 │   1.440248   .0276643    52.06   0.000     1.386027    1.494469
-          x2 │  -.2534587   .0369531    -6.86   0.000    -.3258854   -.1810319
-          x3 │   1.744699   .0368421    47.36   0.000     1.672489    1.816908
-       _cons │  -.7931172   .2508366    -3.16   0.002    -1.284748   -.3014865
+    s1_i1_tp │   .3864798   .0664926     5.81   0.000     .2560895    .5168701
+          x1 │   1.429377   .0298802    47.84   0.000     1.370813    1.487942
+          x2 │  -.2956907   .0402246    -7.35   0.000    -.3745312   -.2168501
+          x3 │   1.790959   .0412797    43.39   0.000     1.710051    1.871868
+       _cons │  -.7498624   .2743725    -2.73   0.006    -1.287623   -.2121016
 ─────────────┴────────────────────────────────────────────────────────────────
 
 ─────────────────────────────┬────────────────────────────────────────────────
   Random-effects Parameters  │   Estimate   Std. Err.     [95% Conf. Interval]
 ─────────────────────────────┼────────────────────────────────────────────────
 id: Identity                 │
-                   sd(_cons) │   .3642743   .0782776      .2390632    .5550657
+                   sd(_cons) │   .4544872   .0715818      .3337775    .6188511
 ─────────────────────────────┼────────────────────────────────────────────────
-                sd(Residual) │   1.026121   .0368901      .9563057    1.101032
+                sd(Residual) │   1.016249   .0370012      .9462554    1.091421
 ─────────────────────────────┴────────────────────────────────────────────────
 </pre>
 <p>Additional diagnostics can be called after <code>mi estimate</code>.</p>
@@ -564,18 +570,18 @@ Variance information
              │        Imputation variance                             Relative
              │    Within   Between     Total       RVI       FMI    efficiency
 ─────────────┼────────────────────────────────────────────────────────────────
-y            │
-    s1_i1_tp │   .003875   .000029    .00391   .008897   .008857       .998232
-          x1 │   .000764   1.3e-06   .000765   .001999   .001997       .999601
-          x2 │   .001365   5.1e-07   .001366   .000448   .000448        .99991
-          x3 │    .00135   5.7e-06   .001357     .0051   .005087       .998984
-       _cons │   .062896   .000019   .062919   .000372   .000372       .999926
+y1           │
+    s1_i1_tp │   .004239   .000152   .004421    .04307   .042108       .991649
+          x1 │   .000891   1.6e-06   .000893   .002168   .002165       .999567
+          x2 │   .001604   .000012   .001618   .008743   .008705       .998262
+          x3 │   .001689   .000012   .001704   .008794   .008755       .998252
+       _cons │   .075141   .000116    .07528    .00186   .001858       .999628
 ─────────────┼────────────────────────────────────────────────────────────────
 lns1_1_1     │
-       _cons │   .045773   .000336   .046176   .008802   .008763        .99825
+       _cons │   .024751   .000046   .024806   .002243    .00224       .999552
 ─────────────┼────────────────────────────────────────────────────────────────
 lnsig_e      │
-       _cons │   .001288   4.0e-06   .001292   .003732   .003725       .999256
+       _cons │   .001321   3.6e-06   .001326   .003293   .003288       .999343
 ─────────────┴────────────────────────────────────────────────────────────────
 
 
@@ -587,30 +593,30 @@ Group variable: id                              Number of groups  =        200
                                                               min =          3
                                                               avg =        3.0
                                                               max =          3
-                                                Average RVI       =     0.0038
-                                                Largest FMI       =     0.0089
-DF adjustment:   Large sample                   DF:     min       =  51,437.76
-                                                        avg       = 7211067.52
-                                                        max       =   2.90e+07
-Model F test:       Equal FMI                   F(   4,610224.4)  =    1905.13
+                                                Average RVI       =     0.0088
+                                                Largest FMI       =     0.0421
+DF adjustment:   Large sample                   DF:     min       =   2,346.06
+                                                        avg       = 470,525.83
+                                                        max       = 1160340.49
+Model F test:       Equal FMI                   F(   4,59453.1)   =    1649.80
                                                 Prob > F          =     0.0000
 
 ─────────────┬────────────────────────────────────────────────────────────────
              │                                                      % Increase
-           y │      Coef.   Std. Err.      t    P>|t|           DF   Std. Err.
+          y1 │      Coef.   Std. Err.      t    P>|t|           DF   Std. Err.
 ─────────────┼────────────────────────────────────────────────────────────────
-y            │
-    s1_i1_tp │   .3859707   .0625264     6.17   0.000      51437.8        0.44
-          x1 │   1.440248   .0276643    52.06   0.000    1004709.8        0.10
-          x2 │  -.2534587   .0369531    -6.86   0.000      2.0e+07        0.02
-          x3 │   1.744699   .0368421    47.36   0.000     155375.4        0.25
-       _cons │  -.7931172   .2508366    -3.16   0.002      2.9e+07        0.02
+y1           │
+    s1_i1_tp │   .3864798   .0664926     5.81   0.000       2346.1        2.13
+          x1 │   1.429377   .0298802    47.84   0.000     854989.2        0.11
+          x2 │  -.2956907   .0402246    -7.35   0.000      53242.4        0.44
+          x3 │   1.790959   .0412797    43.39   0.000      52641.8        0.44
+       _cons │  -.7498624   .2743725    -2.73   0.006    1160340.5        0.09
 ─────────────┼────────────────────────────────────────────────────────────────
 lns1_1_1     │
-       _cons │  -1.009848   .2148864                       52543.3        0.44
+       _cons │  -.7885856   .1575001                      798878.0        0.11
 ─────────────┼────────────────────────────────────────────────────────────────
 lnsig_e      │
-       _cons │   .0257853    .035951                      289404.4        0.19
+       _cons │   .0161189   .0364096                      371243.0        0.16
 ─────────────┴────────────────────────────────────────────────────────────────
 </pre>
 <p>Within, between and total variance show the magnitude of the respective quantities in the Rubin’s rules.</p>

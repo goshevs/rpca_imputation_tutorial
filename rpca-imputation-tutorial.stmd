@@ -72,7 +72,8 @@ misstable pattern, bypat
 qui {
 	egen flag = rowtotal(fl*)
 	bys id: egen miss = total(flag)
-	bys id: replace flag = 1 if miss == 0 & _n == 1
+	drop flag
+	bys id: gen flag = 1 if miss == 0 & _n == 1
 	levelsof time, local(levs)
 	count if flag == 1
 	scalar sprop = `r(N)'/(`=_N'/`: word count `levs'')*100
