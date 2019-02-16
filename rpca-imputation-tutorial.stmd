@@ -50,6 +50,7 @@ for `s1`.
 
 ```s
 simdata 200 3
+keep id time s1_i* s2_i* s3_i* s4_i* x1 x2 x3 x4 y1
 list id time s1_i* s2_i* in 1/30
 ```
 
@@ -445,7 +446,7 @@ qui {
 	foreach var of varlist s1_i* s2_i* s3_i* s4_i* {
 		ren `var' `var'_tp
 	}
-	reshape wide s1_i* s2_i* s3_i* s4_i* x1 x3 x4 y, i(id) j(time)
+	reshape wide s1_i* s2_i* s3_i* s4_i* x1 x3 x4 y1, i(id) j(time)
 
 	*** collect all items of a scale
 	forval i = 1/4 {
@@ -483,7 +484,7 @@ qui snapshot save, label("original-data")
 Finally, we impute the missing values of item 1 in scale 1.
 
 ```s
-mi impute mvn `s1' = x1* i.x2* x3* y*, add(5)  saveptrace(mytrace, replace)
+mi impute mvn `s1' = x1* i.x2* x3* y1*, add(5)  saveptrace(mytrace, replace)
 ```
 
 The next step is to check convergence. We use command `mi ptrace` to retrieve 
@@ -599,7 +600,7 @@ Let's apply this method to items 1 of scales 1 and 4:
 snapshot restore 1
 ```
 ```s
-mi impute chained (regress) `s4' (ologit, augment) `s1' = x1* x2* x3* y*, ///
+mi impute chained (regress) `s4' (pmm, knn(3)) `s1' = x1* i.x2 x3* y1*, ///
 			add(5) burnin(100) chaindots savetrace(mytrace, replace)
 ```
 
@@ -660,14 +661,14 @@ qui {
 	}
 	local mystubs: list uniq mystubs
 
-	mi reshape long `mystubs' x1 x3 x4 y, i(id) j(time)
+	mi reshape long `mystubs' x1 x3 x4 y1, i(id) j(time)
 }
 mi estimate: mean s1_i1, over(time)
 ```
 
 Or we can also run a regression:
 ```s
-mi estimate: mixed y s1_i1 x1 x2 x3 || id:
+mi estimate: mixed y1 s1_i1 x1 x2 x3 || id:
 ```
 
 Additional diagnostics can be called after `mi estimate`. 
