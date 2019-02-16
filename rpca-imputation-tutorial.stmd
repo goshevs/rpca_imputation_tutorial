@@ -81,7 +81,7 @@ qui {
 }
 ```
 It appears that some scales have more missingness than others. The proportion of 
-complete responses is 49%. The proportion of subject who responded to all 
+complete responses is 49%. The percentage of subjects who responded to all 
 questions in all waves is `s sprop`%.
 
 
